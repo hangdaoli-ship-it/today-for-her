@@ -294,6 +294,18 @@
   .steps{margin:0;padding-left:22px;font-size:14.5px;line-height:1.95;color:var(--ink)}
   .steps li{padding:1px 0}
   .steps li::marker{color:var(--accent);font-weight:600}
+  /* 首页底部的「记一句」入口：捕获要近，不能藏在菜单里 */
+  .capture-bar{display:flex;gap:8px;margin-bottom:4px}
+  .capture-row{display:flex;align-items:center;gap:8px;justify-content:center;
+               padding:14px;border-radius:16px;border:1px dashed var(--line);
+               color:var(--ink-2);font-size:14px;cursor:pointer;background:transparent;
+               transition:background-color .18s,border-color .18s;flex:1;min-width:0}
+  .capture-row.go{border-style:solid;border-color:var(--accent-line);background:var(--accent-soft);
+                  color:var(--accent-deep);font-weight:600}
+  .capture-row:active{background:var(--card-tint)}
+  .capture-row .cap-ico{color:var(--accent);font-size:14px}
+  .capture-row .cap-badge{margin-left:2px;background:var(--accent);color:#fff;border-radius:999px;
+                          font-size:11.5px;padding:1px 7px;font-weight:600}
   /* 无障碍：键盘焦点可见、动效可关 */
   :focus-visible{outline:2.5px solid var(--accent);outline-offset:3px;border-radius:8px}
   @media (prefers-reduced-motion: reduce){
@@ -742,14 +754,17 @@ function defaultState(){
     profile:{
       name:'她', birthday:'', anniversary:'', babyBirthday:'',
       timeBudget:30, costBudget:2, likes:[], avoid:[], stage:'带娃期', custom:[], days:[],
-      theme:'auto'
+      theme:'auto',
+      disliked:[]    // 她不喜欢的表达方式（比雷区轻，但会硬排除同类任务）
     },
+    skips:{},       // 被"今天时机不对"跳过的次数，用来发现"标题有问题"的任务
     mood:{},        // { '2026-10-07':'很累' }
     done:[],        // [{date,id,title,cat,note,react}]
     picks:{},       // { '2026-10-07':{id, reroll} }
     banned:[],      // 任务 id，被标记"不合适"
     story:{answers:{}, skipped:[], on:{}},   // 把你们的过去问出来的答案
     checks:{},      // 生日清单的打勾状态
+    inbox:[],       // 素材收件箱：她随口说的话、你的灵感，先收进来，事后慢慢变成任务
     createdAt: todayStr()
   };
 }
@@ -759,9 +774,12 @@ let S = load();
    避免她翻到「她／更多」里的雷区清单和私人设置 */
 let HER_MODE = false;
 let FOR_HER  = false;
+let INBOX    = false;
 
 /* 显示名：JS 里只用这一处；另外两处在 <title>/<meta> 和 manifest.webmanifest */
 const APP_LABEL = '予卿';
+/* 每天给几个可选；「换一个」在这几个之间循环 */
+const PICK_COUNT = 3;
 
 /* ---------- 外观：跟随系统 / 浅色 / 深色 ---------- */
 function resolveTheme(){
@@ -813,7 +831,13 @@ function save(){
 
 function library(){
   return LIB.concat(MY_LIB, (S.profile.custom||[]).map((t,i)=>({
-    id:'U'+i, cat:'分担', title:t.title, how:t.how||'', min:t.min||15, cost:t.cost||0, tags:['务实省钱'], flags:[]
+    id:'U'+i,
+    cat:  CATS.includes(t.cat) ? t.cat : '分担',
+    title:t.title, how:t.how||'',
+    min:  (typeof t.min === 'number' ? t.min : 15),
+    cost: (typeof t.cost === 'number' ? t.cost : 0),
+    tags: (Array.isArray(t.tags) && t.tags.length) ? t.tags.filter(x=>LIKES.includes(x)) : ['务实省钱'],
+    flags:(Array.isArray(t.flags) ? t.flags.filter(x=>FLAGS.includes(x)) : [])
   })));
 }
 
@@ -869,6 +893,8 @@ function candidates(date, ctx){
 
   return pool.filter(t=>{
     if(S.banned.includes(t.id)) return false;
+    // 「她不感兴趣」→ 硬排除同类：否则只是扣分，"同类不会再出现"就是空话
+    if((S.profile.disliked||[]).some(x => (t.tags||[]).includes(x))) return false;
     if(recent[t.id] !== undefined && recent[t.id] < 14) return false;
     if(t.min > maxMin) return false;
     if(t.cost > costBudget) return false;
@@ -1004,6 +1030,78 @@ function yearsSince(dateStr){
   return Math.max(0, y);
 }
 /* ---------- 「你们的过去」问答 ---------- */
+/* ===== 从一句话里抽日期：规则版（离线、不猜、可解释） ===== */
+const CN_NUM = {'一':1,'二':2,'两':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9,'十':10,'十一':11,'十二':12};
+function cnNum(s){ if(s==null) return null; if(/^\d+$/.test(s)) return +s; return (s in CN_NUM) ? CN_NUM[s] : null; }
+function extractDates(text){
+  const t = String(text||''), out = [], now = new Date();
+  const add = (y,m,d,src,ctx) => {
+    if(!m || !d || m<1 || m>12 || d<1 || d>31) return;
+    out.push({year:y||null, m:m, d:d, src:src, ctx:ctx||''});
+  };
+  // 2014年6月21日 / 二〇一四年…就先不管了
+  for(const m of t.matchAll(/((?:19|20)\d{2})\s*年\s*(\d{1,2}|[一二三四五六七八九十]{1,3})\s*月\s*(\d{1,2}|[一二三四五六七八九十]{1,3})\s*[日号]/g))
+    add(+m[1], cnNum(m[2]), cnNum(m[3]), m[0], t.slice(Math.max(0,m.index-4), m.index));
+  // 2014-06-21 / 2014.6.21 / 2014/6/21
+  for(const m of t.matchAll(/((?:19|20)\d{2})[-\/.](\d{1,2})[-\/.](\d{1,2})/g))
+    add(+m[1], +m[2], +m[3], m[0], t.slice(Math.max(0,m.index-4), m.index));
+  // 6月21日（不带年份）
+  for(const m of t.matchAll(/(\d{1,2}|[一二三四五六七八九十]{1,3})\s*月\s*(\d{1,2}|[一二三四五六七八九十]{1,3})\s*[日号]/g)){
+    const ctx = t.slice(Math.max(0, m.index-4), m.index);
+    let y = null;
+    if(/去年/.test(ctx)) y = now.getFullYear() - 1;
+    else if(/前年/.test(ctx)) y = now.getFullYear() - 2;
+    else if(/今年|那年|当天/.test(ctx)) y = now.getFullYear();
+    add(y, cnNum(m[1]), cnNum(m[2]), m[0], ctx);
+  }
+  const seen = {};
+  return out.filter(x => { const k = x.m+'-'+x.d; if(seen[k]) return false; seen[k] = 1; return true; })
+            .sort((a,b) => (b.year?1:0) - (a.year?1:0));
+}
+function hasDay(m,d){
+  const md = String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+  if(S.profile.birthday && mdOf(S.profile.birthday).m+'-'+mdOf(S.profile.birthday).d === m+'-'+d) return true;
+  return (S.profile.days||[]).some(x => x.md === md);
+}
+function guessDayLabel(){
+  const t = Array.prototype.slice.call(arguments).map(x=>String(x||'')).join(' ');
+  if(/领证|结婚证|登记/.test(t)) return '领证纪念日';
+  if(/婚礼|办酒|婚宴/.test(t)) return '婚礼纪念日';
+  if(/在一起|相恋|恋爱|看球|世界杯/.test(t)) return '相恋纪念日';
+  if(/出生|出生那天/.test(t)) return '出生日';
+  if(/搬家|新房|入住/.test(t)) return '搬进新家的日子';
+  return '纪念日';
+}
+function askAddDate(found, q){
+  const label = guessDayLabel(q.q + ' ' + found.src);
+  const ymd = found.year ? (found.year+'-'+String(found.m).padStart(2,'0')+'-'+String(found.d).padStart(2,'0')) : '';
+  openSheet(
+    '<h2>要不要记成重要日子？</h2>'
+    + '<div class="muted" style="margin-bottom:14px">你在这一题里写到了「<b>'+esc(found.src)+'</b>」。'
+    + '记进来之后，它会提前 7 天提醒你先准备。</div>'
+    + '<input type="text" id="fd-label" value="'+esc(label)+'" placeholder="名字">'
+    + '<input type="date" id="fd-date" value="'+ymd+'">'
+    + '<select id="fd-kind"><option value="anniversary">纪念日</option>'
+    + '<option value="birthday">生日</option><option value="family">家人相关的日子</option>'
+    + '<option value="quiet">回避日（当天不推惊喜）</option></select>'
+    + '<button class="btn primary" id="fd-add">加进重要日子</button>'
+    + '<button class="btn text" id="fd-no">不用</button>'
+  );
+  document.getElementById('fd-add').onclick = ()=>{
+    const lb = ((document.getElementById('fd-label')||{}).value||'').trim();
+    const dv = ((document.getElementById('fd-date')||{}).value||'').trim();
+    const kd = ((document.getElementById('fd-kind')||{}).value)||'anniversary';
+    if(!lb){ toast('给它起个名字'); return; }
+    if(!dv){ toast('补一个日期'); return; }
+    const parts = dv.split('-');
+    S.profile.days = S.profile.days || [];
+    S.profile.days.push({ id:'d'+Date.now(), label:lb, kind:kd, lunar:false,
+      md: String(parts[1]).padStart(2,'0')+'-'+String(parts[2]).padStart(2,'0') });
+    save(); closeSheet(); render(); toast('记下了：'+lb);
+  };
+  document.getElementById('fd-no').onclick = closeSheet;
+}
+
 function nextStoryQ(){
   const st = S.story || (S.story = {answers:{}, skipped:[], on:{}});
   st.answers = st.answers || {}; st.skipped = st.skipped || [];
@@ -1038,6 +1136,7 @@ let TAB = 'today';
 function render(){
   const keepY = window.scrollY || 0;
   if(FOR_HER){ app.innerHTML = viewForHer(); bind(); window.scrollTo(0, keepY); return; }
+  if(INBOX){ app.innerHTML = viewInbox(); bind(); window.scrollTo(0, 0); return; }
   // 注意：引导页也必须调 bind()，否则「继续／上一步」按钮没有点击事件
   if(!S.onboarded){ app.innerHTML = viewOnboard(); bind(); afterOnboard(); window.scrollTo(0, keepY); return; }
   app.innerHTML = viewShell();
@@ -1215,6 +1314,13 @@ function tabbar(){
 /* --- 今天 --- */
 function viewToday(){
   if(HER_MODE) return herToday();   // 她模式：不露当天安排
+  const captureRow = () => {
+    const n = inboxCount();
+    return '<div class="capture-bar">'
+      + '<div class="capture-row" data-act="capture-open"><span class="cap-ico">✎</span> 记一句她说的话</div>'
+      + (n ? '<div class="capture-row go" data-act="inbox-open">收件箱 · '+n+' ▸</div>' : '')
+      + '</div>';
+  };
   const t = todayPick();
   const d = t.date, mood = S.mood[d] || '一般';
   const sp = specialKind(d);
@@ -1285,6 +1391,7 @@ function viewToday(){
       + '<div class="muted">明天早上再来。</div>'
       + '</div>'
       + '<div class="daycount">这是第 '+total+' 件小事</div>';
+    html += captureRow();
     return html;
   }
 
@@ -1306,10 +1413,13 @@ function viewToday(){
       + '<div class="daycount">这是第 '+(total+1)+' 件小事</div>'
       + '<button class="btn primary" data-act="done">做完了</button>'
       + '<div class="row" style="margin-top:10px">'
-        + '<button class="btn ghost" data-act="reroll">换一个</button>'
+        + '<button class="btn ghost" data-act="reroll">换一个 · '+((t.reroll||0)+1)+'/'+PICK_COUNT+'</button>'
         + '<button class="btn ghost" data-act="ban">今天不合适</button>'
-      + '</div>';
+      + '</div>'
+      + '<div class="muted" style="text-align:center;margin-top:10px;font-size:12px">今天给你挑了 '+PICK_COUNT+' 个，换到头会绕回第一个</div>';
   }
+  // 素材收件箱入口：捕获要尽可能近，别藏在"更多"里；完成今天这件事之后也要在
+  html += captureRow();
   return html;
 }
 
@@ -1420,6 +1530,14 @@ function viewHer(){
   }
   html += '</div>';
 
+  // 她不喜欢的表达方式（点一下可以撤销）
+  if((p.disliked||[]).length){
+    html += '<div class="card"><h3>她不喜欢的表达方式</h3>'
+      + '<div class="muted" style="margin-bottom:10px">来自你每次点的「她不感兴趣」。同类任务不会再出现，点一下可以撤销。</div>'
+      + (p.disliked||[]).map((x,i)=>'<span class="tag grey" data-undislike="'+i+'">'+esc(x)+' ✕</span>').join('')
+      + '</div>';
+  }
+
   html += '<div class="card"><h3>她在乎的</h3>';
   html += '<div>'+(p.likes.length ? p.likes.map(x=>'<span class="tag">'+esc(x)+'</span>').join('') : '<span class="muted">还没选</span>')+'</div>';
   html += '<div class="divider"></div><h3>绝不做的</h3>';
@@ -1461,11 +1579,15 @@ function kv(k,v){ return '<div class="kv"><span class="muted" style="font-size:1
 
 /* --- 更多 --- */
 function viewMore(){
+  const inboxPrefill = window.__inboxPrefill || '';   // 从收件箱带过来的原句，用一次就清掉
+  window.__inboxPrefill = '';
   return storageWarning()
   + '<div class="card"><h3>加一条专属小事</h3>'
     + '<div class="muted" style="margin-bottom:10px">只有你知道的、任务库里没有的事，加进来后就会进入推荐。</div>'
-    + '<input type="text" id="custom-title" placeholder="例如：把她的车加满油">'
+    + '<input type="text" id="custom-title" value="'+esc(inboxPrefill)+'" placeholder="例如：把她的车加满油">'
     + '<button class="btn ghost" data-act="add-custom">加进任务库</button>'
+    + '<button class="btn ghost" data-act="ai-open" style="margin-top:9px">让 AI 帮你写一条</button>'
+    + '<div class="muted" style="margin-top:9px;font-size:12.5px">用你自己的话说清情况 → 生成提示词 → 粘给任意 AI → 结果粘回来。<b>App 本身不联网</b>，粘回来的内容会先在本地过一遍她的雷区清单。</div>'
   + '</div>'
   + '<div class="card"><h3>重要日子</h3>'
     + '<div class="muted" style="margin-bottom:10px">生日和纪念日在引导里填过了，这里可以加领证日、她家里人的生日。重要日子前 7 天，App 会自动开始推"先准备"的事；标记成「回避日」的日子，当天不推任何惊喜。</div>'
@@ -1492,7 +1614,13 @@ function viewMore(){
   + '</div>'
   + pendingDaysCard()
   + themeCard()
+  + skipCard()
   + installNote()
+  + '<div class="card"><h3>素材收件箱'+(inboxCount()? ' · '+inboxCount()+' 条':'')+'</h3>'
+    + '<div class="muted" style="margin-bottom:10px">她随口说的话、你刚想到的事，先收进来。App 会给候选，一条条变成能做的小事。</div>'
+    + '<button class="btn ghost" data-act="inbox-open">'+(inboxCount()? '去处理这 '+inboxCount()+' 条' : '看看收件箱')+'</button>'
+    + '<button class="btn ghost" data-act="capture-open" style="margin-top:9px">记一句</button>'
+  + '</div>'
   + '<div class="card"><h3>把手机递给她</h3>'
     + '<div class="muted" style="margin-bottom:10px">打开「给她的那一页」：一屏，只有给她的那句话和今天这件事。进入后会自动隐藏「她／更多」两个页面，免得她翻到雷区清单和私人设置。</div>'
     + '<button class="btn ghost" data-act="hand-over">打开给她的那一页</button>'
@@ -1532,6 +1660,21 @@ function pendingDaysCard(){
     + '</div>';
 }
 function themeCard(){
+  return themeCardBody();
+}
+function skipCard(){
+  const s = S.skips || {};
+  const hot = Object.keys(s).filter(id => s[id] >= 3);
+  if(!hot.length) return '';
+  const lib = library();
+  const items = hot.map(id => { const t = lib.find(x => x.id === id); return t ? {title:t.title, n:s[id]} : null; }).filter(Boolean);
+  if(!items.length) return '';
+  return '<div class="card card-note"><h3>这几条被跳过 3 次以上</h3>'
+    + '<div class="muted" style="margin-bottom:8px">可能标题不够具体，或者总是时机不对。挑一条改一下措辞，效果会立刻变好。</div>'
+    + items.map(x => '<div class="kv"><span style="font-size:14px">'+esc(x.title)+'</span><span class="muted">跳 '+x.n+' 次</span></div>').join('')
+    + '</div>';
+}
+function themeCardBody(){
   const cur = (S.profile && S.profile.theme) || 'auto';
   const opts = [['auto','跟随系统'],['light','浅色'],['dark','深色']];
   return '<div class="card"><h3>外观</h3>'
@@ -1620,21 +1763,87 @@ function bind(){
       save(); resolveTheme(); render();
     };
   });
+  const live = () => (S.inbox || []).filter(x => !x.used);
+  document.querySelectorAll('[data-inbox-pick]').forEach(el=>{
+    el.onclick = ()=>{
+      const it = live()[+el.dataset.inboxPick]; if(!it) return;
+      const c = taskCandidatesFrom(it.text)[+el.dataset.cand]; if(!c || !c.title) return;
+      S.profile.custom = S.profile.custom || [];
+      S.profile.custom.push(c);
+      it.used = true;
+      save(); render(); toast('加进任务库了');
+    };
+  });
+  document.querySelectorAll('[data-inbox-own]').forEach(el=>{
+    el.onclick = ()=>{
+      const it = live()[+el.dataset.inboxOwn]; if(!it) return;
+      window.__inboxPrefill = it.text;
+      it.used = true; save();
+      INBOX = false; TAB = 'more'; render();
+      toast('在下面把它写成一条任务');
+    };
+  });
+  document.querySelectorAll('[data-inbox-drop]').forEach(el=>{
+    el.onclick = ()=>{
+      const it = live()[+el.dataset.inboxDrop]; if(!it) return;
+      it.used = true; save(); render();
+    };
+  });
+  document.querySelectorAll('[data-undislike]').forEach(el=>{
+    el.onclick = ()=>{
+      const i = +el.dataset.undislike;
+      S.profile.disliked = (S.profile.disliked||[]);
+      S.profile.disliked.splice(i,1);
+      save(); render(); toast('撤销了');
+    };
+  });
 }
 function handle(act){
   if(act === 'ob-back'){ window.__step = Math.max(0,(window.__step||0)-1); render(); return; }
   if(act === 'ob-next'){ return onboardNext(); }
   if(act === 'reroll'){
     const d = todayStr();
-    if((S.picks[d].reroll||0) >= 2){ toast('今天就先这一件吧'); return; }
-    S.picks[d].reroll = (S.picks[d].reroll||0)+1; save(); render(); return;
+    // 循环：第 3 个再点回到第 1 个（以前是"只前进"，用完就卡在最后一个、回不去）
+    S.picks[d].reroll = ((S.picks[d].reroll||0) + 1) % PICK_COUNT;
+    save(); render(); return;
   }
   if(act === 'ban'){
-    const t = todayPick();
-    if(t.task && !S.banned.includes(t.task.id)) S.banned.push(t.task.id);
+    return askWhyNot();
+  }
+  if(act === 'why-pick'){
+    const t = todayPick(); const why = window.__why;
+    if(!t.task) return;
     const d = todayStr();
-    if((S.picks[d].reroll||0) < 2) S.picks[d].reroll = (S.picks[d].reroll||0)+1;
-    save(); toast('已排除这件事'); render(); return;
+    if(why === '太麻烦'){
+      const ladder = [5,15,30,60,999];
+      const i = Math.max(0, ladder.indexOf(S.profile.timeBudget||999));
+      S.profile.timeBudget = ladder[Math.max(0, i-1)];
+      S.picks[d].reroll = ((S.picks[d].reroll||0) + 1) % PICK_COUNT;
+      save(); closeSheet(); render(); toast('已把每天可用时间调到 ' + (S.profile.timeBudget===999?'不限':S.profile.timeBudget+' 分钟'));
+      return;
+    }
+    if(why === '她不感兴趣'){
+      const tags = (t.task.tags||[]);
+      S.profile.disliked = S.profile.disliked || [];
+      tags.forEach(tag => { if(S.profile.disliked.indexOf(tag) < 0) S.profile.disliked.push(tag); });
+      if(S.banned.indexOf(t.task.id) < 0) S.banned.push(t.task.id);
+      save(); closeSheet(); render();
+      toast(tags.length ? ('记下了：她不喜欢「'+tags[0]+'」这类，同类不会再出现') : '记下了，这条不再出现');
+      return;
+    }
+    if(why === '今天时机不对'){
+      // 只跳过今天：不改她的状态、不永久排除（以前这里会误把"她今天很累"写进去）
+      S.skips = S.skips || {};
+      S.skips[t.task.id] = (S.skips[t.task.id] || 0) + 1;
+      S.picks[d].reroll = ((S.picks[d].reroll||0) + 1) % PICK_COUNT;
+      save(); closeSheet(); render(); toast('今天先跳过，明天再说');
+      return;
+    }
+    // 看不懂 → 永久排除；同时提示去改标题
+    if(S.banned.indexOf(t.task.id) < 0) S.banned.push(t.task.id);
+    S.picks[d].reroll = ((S.picks[d].reroll||0) + 1) % PICK_COUNT;
+    save(); closeSheet(); render(); toast('已排除，以后不会再出现');
+    return;
   }
   if(act === 'done'){ return askDone(); }
   if(act === 'save-done'){ return saveDone(); }
@@ -1651,6 +1860,10 @@ function handle(act){
     return;
   }
   if(act === 'install-hide'){ S.profile.installDismissed = true; save(); render(); return; }
+  if(act === 'inbox-open'){ INBOX = true; HER_MODE = false; FOR_HER = false; render(); return; }
+  if(act === 'inbox-close'){ INBOX = false; render(); return; }
+  if(act === 'capture-open'){ return captureSheet(); }
+  if(act === 'batch-open'){ return batchSheet(); }
   if(act === 'enter-her'){ FOR_HER = false; TAB = 'today'; render(); window.scrollTo(0,0); return; }
   if(act === 'exit-her'){ FOR_HER = false; HER_MODE = false; TAB = 'today'; render(); window.scrollTo(0,0); return; }
   if(act === 'edit-bday-msg'){
@@ -1709,6 +1922,7 @@ function handle(act){
     S.profile.custom = S.profile.custom || []; S.profile.custom.push({title:v, min:15, cost:0});
     save(); toast('已加进任务库'); render(); return;
   }
+  if(act === 'ai-open'){ return openAiSheet(); }
   if(act === 'add-day'){
     const label = ((document.getElementById('day-label')||{}).value || '').trim();
     const datev = ((document.getElementById('day-date')||{}).value || '').trim();
@@ -1809,6 +2023,12 @@ function saveStory(){
   S.story.on = S.story.on || {};
   S.story.on[todayStr()] = (S.story.on[todayStr()] || 0) + 1;
   save();
+  // 顺手把答案里的日期捞出来（规则抽取，不联网）——这是最值得自动化的那一步
+  const found = extractDates(v).filter(x => !hasDay(x.m, x.d));
+  if(found.length){
+    setTimeout(()=>askAddDate(found[0], q), 260);
+    return;
+  }
   if(q.t){
     openSheet(
       '<h2>要不要把它变成一件小事？</h2>'
@@ -1919,6 +2139,287 @@ function exportICS(){
   a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 3000);
   toast('已导出，用手机打开导入日历');
 }
+
+/* ===== 「让 AI 帮你写一条」：App 只出提示词 + 本地校验，自己不上网 ===== */
+/* ===== 素材收件箱 → 任务候选：把"她随口说的话"变成能执行的小事 =====
+   设计：捕获与处理分开。捕获只要 5 秒（一句话），处理交给这里给候选。 */
+function taskCandidatesFrom(text){
+  const t = String(text||'').trim();
+  const out = [];
+  const add = (title, how, cat, min, cost, tags, flags) => out.push({title, how, cat, min, cost, tags, flags:flags||[]});
+  if(!t) return out;
+
+  // ① 想吃 / 好久没吃 / 想吃点什么
+  let m = t.match(/(?:想吃|好久没吃|馋|想吃点|想吃一次)\s*([^，。！？!?\s]{2,10})/);
+  if(m) add('带她去吃一次'+m[1], '不用问她想不想，直接订位。', '惊喜', 90, 2, ['美食','一起出门'], ['需要外出']);
+
+  // ② 想去 / 想看 / 想逛
+  m = t.match(/(?:想去|想看|想逛|好想去|想去看|好久没去)\s*([^，。！？!?\s]{2,12})/);
+  if(m){
+    const place = m[1];
+    if(/展|演出|电影|话剧|音乐会|球/.test(place)) add('订两张'+place+'的票，带她去', '挑她说过的那个，别让她选时间。', '惊喜', 120, 2, ['一起出门','惊喜和仪式感'], ['需要外出']);
+    else add('带她去一次'+place, '把亨亨安排好，这天只属于你们俩。', '回忆', 120, 2, ['一起出门'], ['需要外出','涉及亨亨']);
+  }
+
+  // ③ 身体不舒服：疼/酸/累/睡不好
+  if(/疼|酸|不舒服|累|睡不好|失眠|落枕/.test(t)){
+    if(/腰|抱娃|抱孩子/.test(t)) add('今晚的娃我全包，她躺着就行', '夜里也归我，别让她爬起来。', '亲子', 60, 0, ['睡饱觉','独处时间'], ['涉及亨亨']);
+    else add('今天家里的事我全接过来，她只管休息', '不用问她想不想被照顾，直接做。', '分担', 30, 0, ['务实省钱'], []);
+  }
+
+  // ④ 乱 / 脏 / 该收拾
+  m = t.match(/([^，。！？!?\s]{2,6})(?:好乱|太乱|乱|该收拾|没收|堆)/);
+  if(m) add('把'+m[1]+'收拾干净，不用她动手', '趁她没注意的时候做完。', '分担', 30, 0, ['干净整洁的家'], []);
+
+  // ⑤ 情绪/压力/委屈
+  if(/烦|委屈|压力|崩|不开心|郁闷|生气/.test(t))
+    add('今晚不聊娃不聊工作，听她说完', '问一句"今天哪一刻最难熬"，然后只听。', '关注', 15, 0, ['有人陪聊','安静不被打扰'], []);
+
+  // ⑥ 提到具体的人
+  m = t.match(/([^，。！？!?\s]{2,4})(?:说|问|找我|找我聊|吐槽)/);
+  if(m) add('主动问一句她'+m[1]+'那件事后来怎么样了', '说明你记着她说过的话。', '关注', 10, 0, ['有人陪聊'], []);
+
+  // ⑦ 兜底：把原句交还给"自己写"
+  if(!out.length) add('', t, '分担', 15, 0, ['务实省钱'], []);
+  // 过一遍她的雷区，命中就丢掉
+  return out.filter(x => !(x.title && avoidHit(x.title + ' ' + x.how)));
+}
+function inboxCount(){ return (S.inbox||[]).filter(x => !x.used).length; }
+/* 「今天不合适」不该只是屏蔽——问一句为什么，库才能越长越准 */
+function askWhyNot(){
+  const t = todayPick();
+  if(!t.task){ toast('今天没有任务'); return; }
+  const opts = [
+    ['太麻烦', '以后少推费时间的（会把你每天可用时间调小一档）'],
+    ['她不感兴趣', '把这条记住，同类也不会再出现'],
+    ['今天时机不对', '只跳过今天，明天还可能遇到'],
+    ['看不懂', '这条永远不再出现']
+  ];
+  openSheet(
+    '<h2>哪里不合适？</h2>'
+    + '<div class="muted" style="margin-bottom:14px">说一句，它下次就不会再犯。现在这条：'+esc(t.task.title)+'</div>'
+    + opts.map(([k,v],i)=>'<div class="chk" data-why="'+i+'"><div><b>'+esc(k)+'</b>'
+        + '<div class="muted" style="font-size:12.5px;margin-top:2px">'+esc(v)+'</div></div></div>').join('')
+    + '<button class="btn text" id="why-cancel">算了，就跳过</button>'
+  );
+  document.querySelectorAll('[data-why]').forEach(el=>{
+    el.onclick = ()=>{ window.__why = opts[+el.dataset.why][0]; handle('why-pick'); };
+  });
+  document.getElementById('why-cancel').onclick = ()=>{
+    const d = todayStr();
+    S.picks[d].reroll = ((S.picks[d].reroll||0) + 1) % PICK_COUNT;
+    save(); closeSheet(); render();
+  };
+}
+function captureSheet(){
+  openSheet(
+    '<h2>记一句</h2>'
+    + '<div class="muted" style="margin-bottom:12px">她随口说的话、你刚想到的事，先记下来就行，不用分类。有空的时候 App 会给候选。</div>'
+    + '<textarea id="cap-text" placeholder="例如：她说好久没去看展了 / 她抱怨腰又疼"></textarea>'
+    + '<button class="btn primary" id="cap-save">记下来</button>'
+    + '<button class="btn text" id="cap-cancel">取消</button>'
+  );
+  document.getElementById('cap-cancel').onclick = closeSheet;
+  const save1 = ()=>{
+    const v = ((document.getElementById('cap-text')||{}).value||'').trim();
+    if(!v){ toast('写一句就行'); return; }
+    S.inbox = S.inbox || [];
+    S.inbox.unshift({ id:'i'+Date.now(), text:v, at:todayStr(), used:false });
+    save(); closeSheet(); render();
+    toast('记下了，等你有空再处理');
+  };
+  document.getElementById('cap-save').onclick = save1;
+  setTimeout(()=>{ const el=document.getElementById('cap-text'); if(el&&el.focus) el.focus(); }, 120);
+  // 顺手读一次剪贴板：从微信复制过来，打开就能一键收（读不到就静默跳过）
+  try{
+    if(navigator.clipboard && navigator.clipboard.readText){
+      navigator.clipboard.readText().then(t=>{
+        const el = document.getElementById('cap-text');
+        if(t && el && !el.value){ el.value = String(t).trim(); toast('已从剪贴板带进来'); }
+      }).catch(()=>{});
+    }
+  }catch(e){}
+}
+function batchSheet(){
+  openSheet(
+    '<h2>批量粘贴</h2>'
+    + '<div class="muted" style="margin-bottom:12px">把你发给「文件传输助手」的那几条粘进来，一行一条，App 会全部收进收件箱。</div>'
+    + '<textarea id="batch-text" style="min-height:130px" placeholder="她说好久没去看展了&#10;她说腰又疼&#10;她说想吃那家火锅"></textarea>'
+    + '<button class="btn primary" id="batch-save">全部收下</button>'
+    + '<button class="btn text" id="batch-cancel">取消</button>'
+  );
+  document.getElementById('batch-cancel').onclick = closeSheet;
+  document.getElementById('batch-save').onclick = ()=>{
+    const v = ((document.getElementById('batch-text')||{}).value||'');
+    const lines = v.split(/\r?\n|[；;]/).map(s=>s.trim()).filter(s=>s.length>1);
+    if(!lines.length){ toast('没读到内容'); return; }
+    S.inbox = S.inbox || [];
+    lines.forEach((s,i)=> S.inbox.unshift({ id:'i'+Date.now()+'_'+i, text:s, at:todayStr(), used:false }));
+    save(); closeSheet(); render(); toast('收下 '+lines.length+' 条');
+  };
+}
+function viewInbox(){
+  const items = (S.inbox||[]).filter(x => !x.used);
+  let html = '<div class="topbar"><div><h1>素材收件箱</h1><div class="sub">她说过的话，变成能做的小事</div></div>'
+    + '<button class="fh-exit" data-act="inbox-close">返回</button></div><div class="scroll">';
+  if(!items.length){
+    html += '<div class="card card-note"><h3>收件箱是空的</h3>'
+      + '<div class="muted">下次她随口说"好久没……"，就点首页的「记一句」收进来。攒着不用管，有空再来处理。</div></div>';
+  }
+  items.forEach((it, idx) => {
+    const cands = taskCandidatesFrom(it.text);
+    html += '<div class="card"><div class="today-cat">'+esc(it.at)+' 记的</div>'
+      + '<div class="today-title" style="font-size:19px;margin-bottom:14px">'+esc(it.text)+'</div>';
+    if(cands.length && cands[0].title){
+      html += '<div class="fh-label">可以变成这些（点一个就入库）</div>';
+      cands.slice(0,3).forEach((c,ci)=>{
+        html += '<div class="chk" data-inbox-pick="'+idx+'" data-cand="'+ci+'">'
+          + '<span class="box">＋</span><div><b>'+esc(c.title)+'</b>'
+          + (c.how ? '<div class="muted" style="font-size:12.5px;margin-top:2px">'+esc(c.how)+'</div>' : '')
+          + '<div class="muted" style="font-size:11.5px;margin-top:3px">'+esc(c.cat)+' · '+c.min+' 分钟 · '+(c.cost===0?'不花钱':(c.cost===1?'小额':'看情况'))+'</div>'
+          + '</div></div>';
+      });
+      html += '<button class="btn ghost" data-inbox-own="'+idx+'" style="margin-top:4px">自己写一条</button>';
+    } else {
+      html += '<button class="btn primary" data-inbox-own="'+idx+'">写一条专属小事</button>';
+    }
+    html += '<button class="btn text" data-inbox-drop="'+idx+'">这条不用了</button></div>';
+  });
+  html += '<button class="btn ghost" data-act="batch-open">批量粘贴（把发给文件传输助手的几条一起收进来）</button>'
+       +  '<div style="height:16px"></div></div>';
+  return html;
+}
+const AVOID_KEYWORDS = {
+  '别提身材体重': ['瘦','胖','体重','身材','恢复得'],
+  '别提产后':     ['产后','生完','以前不是这样'],
+  '别当众表白':   ['朋友圈','发出去','公开'],
+  '别评价我的外貌': ['漂亮','好看','气色','年轻','美'],
+  '别拿我和别人比': ['别人','人家','你看看'],
+  '别只有节日才想起来': []
+};
+const CATS = ['分担','关注','表达','惊喜','回忆','亲子','独处'];
+const FLAGS = ['涉及亨亨','需要外出','需要体力'];
+function avoidHit(text){
+  const t = String(text||'');
+  for(const k in AVOID_KEYWORDS){
+    if(!(S.profile.avoid||[]).includes(k)) continue;
+    for(const w of AVOID_KEYWORDS[k]){ if(w && t.includes(w)) return k + '（出现「'+w+'」）'; }
+  }
+  return '';
+}
+/* 本地校验：AI 给什么都要过这一关，不合规的直接拒 */
+function normTask(o){
+  const errs = [];
+  o = o || {};
+  const title = String(o.title||'').trim();
+  if(!title) errs.push('缺少 title');
+  if(title.length > 30) errs.push('标题超过 30 字');
+  const how = String(o.how||'').trim();
+  let cat = String(o.cat||'分担'); if(!CATS.includes(cat)) cat = '分担';
+  let min = Number(o.min); if(!isFinite(min) || min < 0 || min > 240) min = 15;
+  let cost = Number(o.cost); if(![0,1,2].includes(cost)) cost = 0;
+  let tags = (Array.isArray(o.tags) ? o.tags : []).filter(x => LIKES.includes(x));
+  let flags = (Array.isArray(o.flags) ? o.flags : []).filter(x => FLAGS.includes(x));
+  let note = '';
+  const hit = avoidHit(title + ' ' + how);
+  if(hit) errs.push('命中她的雷区：' + hit);
+  if((S.profile.avoid||[]).includes('别乱花钱') && cost > 0){ cost = 0; note = '（她说别乱花钱，已把花费改成 0）'; }
+  if(/^帮/.test(title)) note += '（建议去掉"帮"字：本来就是该做的）';
+  return { errs: errs, note: note, task: { title:title, how:how, cat:cat, min:min, cost:cost, tags:tags, flags:flags } };
+}
+function buildAiPrompt(raw){
+  const avoid = (S.profile.avoid||[]);
+  return [
+    '你是帮我给妻子写"每天一件小事"的助手。它每天提醒我做一件具体的小事，要求：',
+    '',
+    '写作规则：',
+    '1. 标题是动词短语，不超过 24 个字，说清"做什么"，不要抽象（不要"多关心她"）',
+    '2. 不要求她做决定、不要求她回应、不需要她配合（不要"问她今天想吃什么"）',
+    '3. 时长要诚实；宁可小到 5 分钟能做完',
+    '4. 不出现"帮她"这个词（本来就是该我做的）',
+    avoid.length ? ('5. 绝对不要碰这些：' + avoid.join('、')) : '5. 不要评价外貌、不要提身材体重',
+    '',
+    '我的素材（把她/我们的情况写成了任务）：',
+    '「' + raw + '」',
+    '',
+    '请输出 JSON 数组（只输出 JSON，不要解释、不要代码块标记），每项格式：',
+    '[{"title":"今晚的碗我洗，她不许进厨房","how":"吃完就收，别等她开口。",' +
+      '"cat":"分担","min":15,"cost":0,"tags":["干净整洁的家"],"flags":["涉及亨亨"]}]',
+    '',
+    '字段取值限制：',
+    'cat 只能是：' + CATS.join(' / '),
+    'tags 只能从这些里选（可空数组）：' + LIKES.join(' / '),
+    'flags 只能从这些里选（可空数组）：' + FLAGS.join(' / '),
+    'min 是 0~240 的整数；cost 是 0(不花钱) / 1(小额) / 2(不限)',
+    '',
+    '一次给 1~3 条。'
+  ].join('\n');
+}
+function openAiSheet(){
+  openSheet(
+    '<h2>让 AI 帮你写一条</h2>'
+    + '<div class="muted" style="margin-bottom:12px">先用你自己的话说清楚情况。App 本身不联网——下一步会把提示词给你，你粘到任意 AI 里（Kimi、ChatGPT、豆包都行），再把结果粘回来。</div>'
+    + '<textarea id="ai-raw" placeholder="例如：她最近说想去看展，周末我能腾出两个小时，她不花钱也开心"></textarea>'
+    + '<button class="btn primary" id="ai-go">生成提示词</button>'
+    + '<button class="btn text" id="ai-cancel">取消</button>'
+  );
+  document.getElementById('ai-cancel').onclick = closeSheet;
+  document.getElementById('ai-go').onclick = ()=>{
+    const raw = ((document.getElementById('ai-raw')||{}).value||'').trim();
+    if(!raw){ toast('先用一句话说说情况'); return; }
+    openAiImportSheet(buildAiPrompt(raw));
+  };
+}
+function openAiImportSheet(prompt){
+  let copied = '已复制到剪贴板，直接粘给 AI';
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(prompt); }
+    else copied = '长按下面的文字全选复制';
+  }catch(e){ copied = '长按下面的文字全选复制'; }
+  openSheet(
+    '<h2>1 · 把这段发给 AI</h2>'
+    + '<div class="muted" style="margin-bottom:10px">'+copied+'</div>'
+    + '<textarea id="ai-prompt" style="min-height:150px;font-size:12.5px">'+esc(prompt)+'</textarea>'
+    + '<h2 style="margin-top:6px">2 · 把 AI 的结果粘回来</h2>'
+    + '<div class="muted" style="margin-bottom:10px">不支持、或者写得不合规的，App 会当场挡下来。</div>'
+    + '<textarea id="ai-back" style="min-height:100px;font-size:12.5px" placeholder=\'[{"title":"…","how":"…","cat":"分担","min":15,"cost":0,"tags":[],"flags":[]}]\'></textarea>'
+    + '<button class="btn primary" id="ai-import">导入</button>'
+    + '<button class="btn text" id="ai-cancel2">取消</button>'
+  );
+  document.getElementById('ai-cancel2').onclick = closeSheet;
+  document.getElementById('ai-import').onclick = ()=>{
+    const t = ((document.getElementById('ai-back')||{}).value||'').trim();
+    if(!t){ toast('还没粘呢'); return; }
+    const r = importTasks(t);
+    if(r.added){
+      closeSheet(); render();
+      toast('加了 '+r.added+' 条'+(r.rejected? ('，挡下 '+r.rejected+' 条'):''));
+    } else {
+      openSheet('<h2>都没通过校验</h2>'
+        + '<div class="muted" style="margin-bottom:12px">下面这些不能进任务库（这层校验在本地做，就是为了防止踩到她的雷区）：</div>'
+        + '<div class="why">'+esc(r.reasons.join('；'))+'</div>'
+        + '<button class="btn ghost" id="ai-back2" style="margin-top:14px">重新粘一次</button>');
+      document.getElementById('ai-back2').onclick = openAiSheet;
+    }
+  };
+}
+function importTasks(text){
+  let s = String(text||'').trim().replace(/^```(json)?/i,'').replace(/```$/,'').trim();
+  let data;
+  try{ data = JSON.parse(s); }catch(e){ return {added:0, rejected:1, reasons:['不是合法 JSON']}; }
+  const list = Array.isArray(data) ? data : [data];
+  let added = 0, rejected = 0; const reasons = [];
+  list.forEach(o => {
+    const r = normTask(o);
+    if(r.errs.length){ rejected++; reasons.push('「'+String((o&&o.title)||'（无标题）').slice(0,14)+'」：'+r.errs.join('、')); return; }
+    S.profile.custom = S.profile.custom || [];
+    S.profile.custom.push(r.task);
+    added++;
+    if(r.note) toast(r.note);
+  });
+  save();
+  return { added:added, rejected:rejected, reasons:reasons };
+}
 function shareCard(){
   const t = todayPick();
   if(!t.task){ toast('没有可分享的内容'); return; }
@@ -2001,9 +2502,29 @@ if(window.matchMedia){
   try{ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', resolveTheme); }catch(e){}
 }
 render();
+/* #capture：直接打开"记一句"。把这条链接也加到桌面，就是"零跳转捕获"的入口 */
+if(location.hash === '#capture') setTimeout(captureSheet, 150);
+/* 从「分享给予卿」进来的文字（微信里提的、短信息里的）→ 直接进素材箱 */
+(function takeShared(){
+  let got = '';
+  try{
+    const m = location.search.match(/[?&]shared=([^&]*)/);
+    if(m) got = decodeURIComponent(m[1].replace(/\+/g,' '));
+    if(!got && location.hash.indexOf('#shared=') === 0) got = decodeURIComponent(location.hash.slice(8));
+    got = (got || '').trim();
+    if(got){
+      S.inbox = S.inbox || [];
+      S.inbox.unshift({ id:'i'+Date.now(), text:got, at:todayStr(), used:false });
+      save(); render();
+      setTimeout(()=>toast('已收进素材箱，有空再处理'), 500);
+      window.__sharedIn = true;
+    }
+    if(history.replaceState) history.replaceState(null, '', location.pathname);
+  }catch(e){}
+})();
 /* 调试/预览接口：供 tools/preview.html 驱动，正常使用不影响任何行为 */
 window.TFH = {
-  go(tab){ TAB = ['today','log','her','more'].includes(tab) ? tab : 'today'; render(); top0(); },
+  go(tab){ INBOX = false; FOR_HER = false; TAB = ['today','log','her','more'].includes(tab) ? tab : 'today'; render(); top0(); },
   state(){ return S; },
   set(patch){ Object.assign(S.profile, patch || {}); save(); render(); top0(); },
   done(){ handle('done'); },

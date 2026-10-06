@@ -20,6 +20,21 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
+  const reqUrl = new URL(e.request.url);
+  /* 「分享给予卿」：从微信/短信/浏览器分享过来的文字，落进素材收件箱
+     （Web Share Target 只有安装成 App 后才生效；没装或浏览器不支持时不会走到这里） */
+  if (e.request.method === 'POST' && reqUrl.pathname.endsWith('/share')) {
+    e.respondWith((async () => {
+      let text = '';
+      try {
+        const fd = await e.request.formData();
+        text = [fd.get('text'), fd.get('title'), fd.get('url')].filter(Boolean).join(' ').trim();
+      } catch (err) {}
+      const to = new URL('./index.html?shared=' + encodeURIComponent(text), self.location).toString();
+      return Response.redirect(to, 303);
+    })());
+    return;
+  }
   if (e.request.method !== 'GET') return;
 
   const isDocument = e.request.mode === 'navigate'
