@@ -1,6 +1,6 @@
 {
-  "name": "今天的小事",
-  "short_name": "今天的小事",
+  "name": "Today for Her",
+  "short_name": "Today for Her",
   "description": "每天告诉你，今天能为她做的那一件小事。",
   "start_url": "./index.html",
   "scope": "./",
