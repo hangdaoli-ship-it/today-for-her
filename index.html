@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="今天为她">
+<meta name="apple-mobile-web-app-title" content="今天的小事">
 <!-- 这是私人礼物，不希望被搜索引擎收录 -->
 <meta name="robots" content="noindex,nofollow,noarchive">
 <link rel="manifest" href="manifest.webmanifest">
@@ -15,7 +15,7 @@
 <link rel="icon" type="image/svg+xml" href="icon.svg">
 <link rel="apple-touch-icon" href="icon-512.png">
 <link rel="shortcut icon" href="icon-512.png">
-<title>今天为她</title>
+<title>今天的小事</title>
 <style>
   :root{
     --bg:#FFF7F2;
@@ -160,7 +160,7 @@
 
 <script>
 /* ============================================================
-   今天为她 · Phase 1 Demo
+   今天的小事 · Phase 1 Demo
    单文件、离线、纯本地存储。无任何网络请求。
    ============================================================ */
 
@@ -851,7 +851,8 @@ const app = document.getElementById('app');
 let TAB = 'today';
 
 function render(){
-  if(!S.onboarded){ app.innerHTML = viewOnboard(); afterOnboard(); return; }
+  // 注意：引导页也必须调 bind()，否则「继续／上一步」按钮没有点击事件
+  if(!S.onboarded){ app.innerHTML = viewOnboard(); bind(); afterOnboard(); return; }
   app.innerHTML = viewShell();
   bind();
 }
@@ -1252,7 +1253,7 @@ function viewMore(){
     + '<button class="btn ghost" data-act="share">生成今日分享卡</button>'
   + '</div>'
   + '<div class="card"><h3>关于</h3>'
-    + '<div class="muted">今天为她 · Phase 1<br>单文件 PWA，可添加到手机主屏幕离线使用。<br>'
+    + '<div class="muted">今天的小事 · Phase 1<br>单文件 PWA，可添加到手机主屏幕离线使用。<br>'
     + '任务库 '+library().length+' 条（含 '+MY_LIB.length+' 条专属），另有节日任务 '+FEST_LIB.length+' 条、准备类 '+PREP_LIB.length+' 条。<br>'
     + '推荐由她的画像、当天状态、临近的重要日子共同决定。</div>'
   + '</div>'
@@ -1558,8 +1559,8 @@ const REMIND_FESTIVALS = FESTIVALS.map(f => f.key).filter(k => k !== 'womens');
 function buildICS(){
   const today = todayStr();
   const A3 = ['-P7D','-P1D','PT0S'], A1 = ['-P1D'];
-  let out = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//TodayForHer//CN\r\n'
-          + 'CALSCALE:GREGORIAN\r\nMETHOD:PUBLISH\r\nX-WR-CALNAME:'+icsEsc('今天为她')+'\r\n';
+  let out = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//OneSmallThing//CN\r\n'
+          + 'CALSCALE:GREGORIAN\r\nMETHOD:PUBLISH\r\nX-WR-CALNAME:'+icsEsc('今天的小事')+'\r\n';
 
   const lunarFest = key => {
     const f = FESTIVALS.find(x => x.key === key);
@@ -1595,8 +1596,8 @@ function buildICS(){
     // 她的生日 / 纪念日 / 家人相关的日子：提前 7 天、提前 1 天、当天 09:00 各提醒一次
     const isBday = x.key === 'birthday';
     out += icsEvent('tfh-'+x.key+'@todayforher', x.date, x.label,
-      (isBday ? '今天是她的生日。打开「今天为她」，照着作战包做：早上早起半小时、白天带娃两小时、傍晚三件套、晚上看半场世界杯。'
-              : '打开「今天为她」，看今天的安排。'),
+      (isBday ? '今天是她的生日。打开「今天的小事」，照着作战包做：早上早起半小时、白天带娃两小时、傍晚三件套、晚上看半场世界杯。'
+              : '打开「今天的小事」，看今天的安排。'),
       A3, x.lunar ? null : 'FREQ=YEARLY');
   });
   return out + 'END:VCALENDAR\r\n';
@@ -1617,7 +1618,7 @@ function shareCard(){
     + '<div class="d">'+fmtDate(t.date)+'</div>'
     + '<div class="t">'+esc(t.task.title)+'</div>'
     + '<div class="muted" style="font-size:13px">第 '+(S.done.length+1)+' 件小事 · 给'+esc(S.profile.name)+'</div>'
-    + '<div class="f">今天为她 · 截图存下来</div>'
+    + '<div class="f">今天的小事 · 截图存下来</div>'
     + '</div>'
     + '<div style="height:14px"></div>'
     + '<button class="btn ghost" id="sheet-cancel2">关掉</button>'
