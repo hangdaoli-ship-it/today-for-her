@@ -1,0 +1,1703 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#FFF7F2">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="今天为她">
+<!-- 这是私人礼物，不希望被搜索引擎收录 -->
+<meta name="robots" content="noindex,nofollow,noarchive">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon-512.png">
+<link rel="shortcut icon" href="icon-512.png">
+<title>今天为她</title>
+<style>
+  :root{
+    --bg:#FFF7F2;
+    --card:#FFFFFF;
+    --ink:#3B322C;
+    --ink-2:#7A6E66;
+    --ink-3:#A99C93;
+    --line:#F0E4DA;
+    --accent:#E4795F;
+    --accent-soft:#FDECE6;
+    --accent-2:#C9A227;
+    --good:#5B9A7E;
+    --shadow:0 6px 22px rgba(180,140,120,.13);
+    --radius:22px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;height:100%}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+    font-size:16px;line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    overscroll-behavior-y:none;
+  }
+  .app{max-width:520px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;position:relative}
+  .scroll{flex:1;overflow-y:auto;padding:0 18px calc(96px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
+  .topbar{padding:calc(20px + env(safe-area-inset-top)) 18px 8px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+  .topbar h1{margin:0;font-size:23px;letter-spacing:.5px;font-weight:600}
+  .topbar .sub{font-size:12.5px;color:var(--ink-3);letter-spacing:.4px}
+  .heart{font-size:20px;transform:translateY(2px)}
+
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-bottom:14px;border:1px solid rgba(240,228,218,.7)}
+  .card.flat{box-shadow:none;border:1px dashed var(--line);background:transparent}
+  h2{font-size:16px;margin:0 0 10px;font-weight:600}
+  h3{font-size:14px;margin:0 0 8px;font-weight:600;color:var(--ink-2)}
+  .muted{color:var(--ink-3);font-size:13px}
+  .tag{display:inline-block;font-size:11.5px;padding:3px 10px;border-radius:999px;background:var(--accent-soft);color:#B85B44;margin:0 6px 6px 0;white-space:nowrap}
+  .tag.grey{background:#F3EEE9;color:var(--ink-2)}
+  .tag.green{background:#E9F4EE;color:#3F7A61}
+  .btn{display:block;width:100%;border:none;border-radius:16px;padding:15px;font-size:16px;font-weight:600;font-family:inherit;cursor:pointer;transition:transform .12s ease,filter .12s ease}
+  .btn:active{transform:scale(.985)}
+  .btn.primary{background:var(--accent);color:#fff;box-shadow:0 6px 18px rgba(228,121,95,.32)}
+  .btn.ghost{background:#F5EDE7;color:var(--ink-2);font-weight:500}
+  .btn.text{background:none;color:var(--ink-3);font-weight:500;font-size:14px;padding:10px}
+  .btn.danger{background:#FDECE9;color:#C0503A}
+  .row{display:flex;gap:10px}
+  .row>*{flex:1}
+
+  /* 今日卡 */
+  .today-card{background:linear-gradient(160deg,#FFFFFF 0%,#FFF3EC 100%);border:1px solid #F6E1D6}
+  .today-cat{font-size:12px;color:#C1735A;letter-spacing:2px;margin-bottom:10px}
+  .today-title{font-size:24px;line-height:1.42;font-weight:600;letter-spacing:.2px;margin:0 0 12px}
+  .today-how{font-size:14.5px;color:var(--ink-2);margin:0 0 14px;padding-left:12px;border-left:3px solid var(--accent-soft)}
+  .meta{display:flex;flex-wrap:wrap;gap:6px 0;margin-bottom:12px}
+  .why{font-size:13.5px;color:#8A6A58;background:#FFF9F5;border-radius:14px;padding:11px 13px;line-height:1.55}
+  .daycount{text-align:center;font-size:13px;color:var(--ink-3);margin:4px 0 18px}
+  .moodpills{display:flex;gap:8px}
+  .mood{flex:1;text-align:center;padding:9px 0;border-radius:14px;background:#F5EDE7;color:var(--ink-2);font-size:14px;cursor:pointer;border:1.5px solid transparent;transition:.15s}
+  .mood.on{background:var(--accent-soft);border-color:#F0BCAA;color:#B85B44;font-weight:600}
+
+  /* 底部导航 */
+  .tabbar{
+    position:fixed;left:0;right:0;bottom:0;max-width:520px;margin:0 auto;
+    background:rgba(255,255,255,.94);backdrop-filter:blur(12px);
+    border-top:1px solid var(--line);display:flex;
+    padding-bottom:env(safe-area-inset-bottom);z-index:30
+  }
+  .tab{flex:1;padding:9px 0 8px;text-align:center;cursor:pointer;color:var(--ink-3);font-size:11.5px;letter-spacing:.5px}
+  .tab.on{color:var(--accent)}
+  .tab svg{display:block;margin:0 auto 3px;width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+
+  /* 弹层 */
+  .sheet{position:fixed;inset:0;background:rgba(59,50,44,.42);display:none;align-items:flex-end;justify-content:center;z-index:50}
+  .sheet.on{display:flex}
+  .sheet-inner{background:#fff;width:100%;max-width:520px;border-radius:26px 26px 0 0;padding:22px 20px calc(22px + env(safe-area-inset-bottom));animation:up .26s cubic-bezier(.2,.8,.2,1)}
+  @keyframes up{from{transform:translateY(30px);opacity:.5}to{transform:translateY(0);opacity:1}}
+  textarea,input[type=text],input[type=date],select{
+    width:100%;border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;font-size:15.5px;
+    font-family:inherit;color:var(--ink);background:#FFFDFB;outline:none;margin-bottom:12px
+  }
+  textarea:focus,input:focus{border-color:#F0BCAA}
+  textarea{min-height:86px;resize:none;line-height:1.6}
+  label{display:block;font-size:13.5px;color:var(--ink-2);margin:0 0 7px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+  .chip{padding:9px 14px;border-radius:999px;background:#F5EDE7;color:var(--ink-2);font-size:14px;cursor:pointer;border:1.5px solid transparent;transition:.15s}
+  .chip.on{background:var(--accent-soft);border-color:#F0BCAA;color:#B85B44;font-weight:600}
+  .chk{display:flex;gap:10px;align-items:flex-start;padding:11px 12px;border-radius:14px;background:#FBF6F2;
+       margin-bottom:8px;font-size:14.5px;line-height:1.5;cursor:pointer;transition:.15s}
+  .chk.on{background:#EFF6F1;color:#4A6B5A;text-decoration:none}
+  .chk .box{flex:0 0 20px;height:20px;border-radius:7px;border:1.5px solid #E2D3C8;background:#fff;
+            display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;margin-top:1px;transition:.15s}
+  .chk.on .box{background:#7BAE95;border-color:#7BAE95}
+  .chk.on div{text-decoration:line-through;text-decoration-color:#B9CFC2}
+
+  /* 引导 */
+  .onboard{padding:calc(40px + env(safe-area-inset-top)) 22px calc(40px + env(safe-area-inset-bottom));min-height:100vh;display:flex;flex-direction:column}
+  .dots{display:flex;gap:5px;margin:0 auto 26px}
+  .dot{width:7px;height:7px;border-radius:50%;background:#EEE1D7}
+  .dot.on{background:var(--accent);width:18px;border-radius:4px}
+  .onboard h2{font-size:21px;line-height:1.5;margin:0 0 8px}
+  .onboard .lead{font-size:14px;color:var(--ink-3);margin:0 0 22px}
+  .grow{flex:1}
+  .big-hello{font-size:26px;line-height:1.55;font-weight:600;margin:0 0 14px}
+
+  /* 记录 */
+  .stat{text-align:center;padding:16px 8px}
+  .stat .n{font-size:27px;font-weight:600;color:var(--accent);line-height:1.2}
+  .stat .l{font-size:12px;color:var(--ink-3);margin-top:2px}
+  .tl{position:relative;padding-left:18px}
+  .tl:before{content:"";position:absolute;left:4px;top:8px;bottom:8px;width:1.5px;background:var(--line)}
+  .tl-item{position:relative;padding:0 0 18px}
+  .tl-item:before{content:"";position:absolute;left:-18px;top:7px;width:9px;height:9px;border-radius:50%;background:#F3C6B6;border:2px solid #fff;box-shadow:0 0 0 2px #FBEFE8}
+  .tl-date{font-size:12px;color:var(--ink-3);letter-spacing:.3px}
+  .tl-title{font-size:15px;font-weight:600;margin:1px 0 3px}
+  .tl-note{font-size:13.5px;color:var(--ink-2)}
+  .tl-note:before{content:"“"}.tl-note:after{content:"”"}
+
+  /* 分享卡 */
+  .share-card{background:linear-gradient(165deg,#FFFDFB,#FFF1E9);border-radius:20px;padding:26px 22px;border:1px solid #F6E1D6;position:relative;overflow:hidden}
+  .share-card .wm{position:absolute;right:-16px;bottom:-24px;font-size:110px;opacity:.06}
+  .share-card .d{font-size:12px;color:var(--ink-3);letter-spacing:2px}
+  .share-card .t{font-size:21px;font-weight:600;line-height:1.5;margin:10px 0}
+  .share-card .f{font-size:12px;color:var(--ink-3);border-top:1px solid var(--line);padding-top:10px;margin-top:14px}
+
+  .toast{position:fixed;left:50%;bottom:110px;transform:translateX(-50%);background:rgba(59,50,44,.9);color:#fff;font-size:14px;padding:10px 18px;border-radius:999px;opacity:0;transition:.25s;z-index:80;pointer-events:none}
+  .toast.on{opacity:1;bottom:120px}
+  .fade{animation:fade .3s ease both}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .confetti{position:fixed;top:-10px;width:8px;height:14px;border-radius:2px;opacity:.9;animation:fall linear forwards;z-index:60;pointer-events:none}
+  @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.2}}
+  .divider{height:1px;background:var(--line);margin:16px 0}
+  .kv{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px solid #F7EFE9;font-size:14.5px}
+  .kv:last-child{border-bottom:none}
+  .kv .v{font-weight:600}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<div class="sheet" id="sheet"><div class="sheet-inner" id="sheetInner"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   今天为她 · Phase 1 Demo
+   单文件、离线、纯本地存储。无任何网络请求。
+   ============================================================ */
+
+/* ---------- 1. 任务库（60 条，与 docs/04 同源） ---------- */
+const LIB = [
+// A 分担
+{id:'A01',cat:'分担',title:'今晚的碗我洗，她不许进厨房',how:'吃完就收，别等她开口。',min:15,cost:0,tags:['干净整洁的家','务实省钱'],flags:[]},
+{id:'A02',cat:'分担',title:'把她的衣服洗了、叠好放回原位',how:'包括她自己都懒得碰的那几件。',min:20,cost:0,tags:['干净整洁的家'],flags:[]},
+{id:'A03',cat:'分担',title:'明天早饭我来做，她那份单独装好',how:'她起来就能直接吃。',min:20,cost:0,tags:['务实省钱','美食'],flags:[]},
+{id:'A04',cat:'分担',title:'整理她的梳妆台和床头柜',how:'只整理，不扔任何东西。',min:15,cost:0,tags:['干净整洁的家'],flags:[]},
+{id:'A05',cat:'分担',title:'她一直拖着的那件小事，我今天去办掉',how:'取快递、退换货、预约，任选一件。',min:30,cost:0,tags:['务实省钱'],flags:['需要外出']},
+{id:'A06',cat:'分担',title:'这周的采购清单我来列，东西也我来买',how:'列完发她看一眼就够了。',min:30,cost:1,tags:['务实省钱'],flags:['需要外出']},
+{id:'A07',cat:'分担',title:'她手机里的照片今天导出来备份一次',how:'顺手把重复的删一删。',min:20,cost:0,tags:['务实省钱'],flags:[]},
+{id:'A08',cat:'分担',title:'她抱怨过三次的那件事，今天彻底解决',how:'别再问"要不要弄"，直接弄完。',min:60,cost:1,tags:['务实省钱'],flags:[]},
+{id:'A09',cat:'分担',title:'明天要用的东西今天全部准备好',how:'奶瓶、衣服、包，摆到她随手能拿的位置。',min:15,cost:0,tags:['干净整洁的家'],flags:[]},
+{id:'A10',cat:'分担',title:'今天家里的垃圾、快递、杂物都归我',how:'不用她说第二遍。',min:20,cost:0,tags:['干净整洁的家'],flags:[]},
+{id:'A11',cat:'分担',title:'她的水杯一直是满的',how:'今天只要看到空了就去续。',min:5,cost:0,tags:['务实省钱'],flags:[]},
+{id:'A12',cat:'分担',title:'把她的手机和耳机都充满电',how:'睡前插上，明早满电。',min:5,cost:0,tags:['务实省钱'],flags:[]},
+{id:'A13',cat:'分担',title:'把玄关和车里收拾干净',how:'明天她出门的时候会舒服一点。',min:20,cost:0,tags:['干净整洁的家'],flags:[]},
+{id:'A14',cat:'分担',title:'今天做的每件家务，我都不说"我帮你"',how:'做了就是做了，不邀功。',min:0,cost:0,tags:['务实省钱'],flags:[]},
+// B 关注
+{id:'B01',cat:'关注',title:'今天不问"吃什么"，直接端上她说过想吃的那样',how:'她随口提过的，你记着。',min:20,cost:1,tags:['美食','有人陪聊'],flags:[]},
+{id:'B02',cat:'关注',title:'找出她今天做得好的一件具体事，说出来',how:'不要说"你真棒"，说清是什么好。',min:5,cost:0,tags:['被夸/被说出来'],flags:[]},
+{id:'B03',cat:'关注',title:'她说话的时候，把手机放下，看着她',how:'哪怕只有五分钟。',min:5,cost:0,tags:['有人陪聊'],flags:[]},
+{id:'B04',cat:'关注',title:'给亨亨拍一张和妈妈的合影，当场给她看',how:'抓拍就好，不要摆拍。',min:5,cost:0,tags:['拍照记录'],flags:['涉及亨亨']},
+{id:'B05',cat:'关注',title:'认真看完她今天发的每一条动态，逐条回应',how:'不是点个赞，是回一句真的话。',min:10,cost:0,tags:['有人陪聊'],flags:[]},
+{id:'B06',cat:'关注',title:'记住她今天提到的人和事，明天主动提起',how:'"你昨天说的那个事后来怎么样了？"',min:5,cost:0,tags:['有人陪聊'],flags:[]},
+{id:'B07',cat:'关注',title:'问一个具体的问题：今天哪一刻最难熬',how:'问完就听，不给建议。',min:10,cost:0,tags:['有人陪聊'],flags:[]},
+{id:'B08',cat:'关注',title:'她今天腰疼手酸吗？直接上手按十分钟',how:'不用问要不要，直接来。',min:10,cost:0,tags:['有人陪聊'],flags:[]},
+{id:'B09',cat:'关注',title:'说一句：你不用做那么好，家里已经很好',how:'看着她的眼睛说。',min:2,cost:0,tags:['被夸/被说出来'],flags:[]},
+{id:'B10',cat:'关注',title:'拍一段她抱娃的日常，存起来',how:'以后播给她看。',min:5,cost:0,tags:['拍照记录'],flags:['涉及亨亨']},
+// C 表达
+{id:'C01',cat:'表达',title:'发一条语音，说一件她怀孕时让你佩服的事',how:'要具体到某一天、某一件事。',min:5,cost:0,tags:['被夸/被说出来'],flags:[]},
+{id:'C02',cat:'表达',title:'写五句话：第一次见她时你的第一反应',how:'写完直接发给她，别改。',min:15,cost:0,tags:['被夸/被说出来'],flags:[]},
+{id:'C03',cat:'表达',title:'说清"当爸爸之后，我最感谢你的一件事"',how:'越具体越好。',min:5,cost:0,tags:['被夸/被说出来'],flags:[]},
+{id:'C04',cat:'表达',title:'把手机壁纸换成她的照片，然后告诉她',how:'不需要完美的一张。',min:3,cost:0,tags:['被夸/被说出来'],flags:[]},
+{id:'C05',cat:'表达',title:'发一条只有你们俩才懂的那个称呼',how:'就一句话，不用铺垫。',min:2,cost:0,tags:['惊喜和仪式感'],flags:[]},
+{id:'C06',cat:'表达',title:'写一张手写便签，塞在她包里或枕头下',how:'三四行就够。',min:5,cost:0,tags:['惊喜和仪式感'],flags:[]},
+{id:'C07',cat:'表达',title:'录一段你和亨亨的声音，说给她听',how:'让亨亨也出个声。',min:5,cost:0,tags:['被夸/被说出来'],flags:['涉及亨亨']},
+{id:'C08',cat:'表达',title:'说清她上次情绪崩的时候，你哪里没做好',how:'是道歉，不是解释。',min:15,cost:0,tags:['有人陪聊'],flags:[]},
+// D 惊喜
+{id:'D01',cat:'惊喜',title:'下班绕路买一样她随口说过的小东西',how:'不用贵，要"你居然记得"。',min:30,cost:1,tags:['收到小礼物','惊喜和仪式感'],flags:['需要外出']},
+{id:'D02',cat:'惊喜',title:'把她爱吃的水果洗好切好，放在她手边',how:'不要放在冰箱里等她拿。',min:10,cost:1,tags:['美食','收到小礼物'],flags:[]},
+{id:'D03',cat:'惊喜',title:'点一杯她爱喝的，不加冰，送到她手上',how:'别问要不要，直接点。',min:20,cost:1,tags:['美食','收到小礼物'],flags:['需要外出']},
+{id:'D04',cat:'惊喜',title:'做一件她不知道你会做的家务',how:'擦窗户、拖地、刷一下卫生间。',min:30,cost:0,tags:['干净整洁的家'],flags:['需要体力']},
+{id:'D05',cat:'惊喜',title:'在她起床之前，把家里恢复成刚打扫过的样子',how:'早起二十分钟就够了。',min:30,cost:0,tags:['干净整洁的家'],flags:['需要体力']},
+{id:'D06',cat:'惊喜',title:'她明天要用的东西，全部摆到随手能拿的位置',how:'包括充电线。',min:10,cost:0,tags:['干净整洁的家'],flags:[]},
+{id:'D07',cat:'惊喜',title:'在冰箱上贴一张"今天家里你做主"的便签',how:'字要手写。',min:5,cost:0,tags:['惊喜和仪式感'],flags:[]},
+{id:'D08',cat:'惊喜',title:'约一次两小时：亨亨交给我，你去干你自己的',how:'说到就做到，中间不要找她。',min:120,cost:0,tags:['独处时间'],flags:['涉及亨亨']},
+// E 回忆
+{id:'E01',cat:'回忆',title:'一起翻相册，找出亨亨出生那天的照片',how:'翻到哪张就聊哪张。',min:15,cost:0,tags:['拍照记录'],flags:['涉及亨亨']},
+{id:'E02',cat:'回忆',title:'今天拍一张"一家三口"，现在就去拍',how:'用三脚架或找人帮拍。',min:15,cost:0,tags:['拍照记录'],flags:['涉及亨亨']},
+{id:'E03',cat:'回忆',title:'把亨亨的小手印做成一张卡片收起来',how:'印泥或者用手机拍照留档。',min:20,cost:1,tags:['拍照记录','惊喜和仪式感'],flags:['涉及亨亨']},
+{id:'E04',cat:'回忆',title:'一起写一句话，放进"亨亨 18 岁再拆"的信封',how:'一人写一句，封好。',min:15,cost:0,tags:['惊喜和仪式感'],flags:['涉及亨亨']},
+{id:'E05',cat:'回忆',title:'重走一次你们第一次约会的地方',how:'尽量还原当时做的那件事。',min:120,cost:2,tags:['一起出门'],flags:['需要外出']},
+{id:'E06',cat:'回忆',title:'在家复刻一次你们第一次约会做的同一件事',how:'同一部电影、同一道菜都算。',min:90,cost:1,tags:['一起出门'],flags:[]},
+{id:'E07',cat:'回忆',title:'把今天的一段日常录下来，存进"未来播放列表"',how:'十秒钟就够。',min:5,cost:0,tags:['拍照记录'],flags:[]},
+// F 亲子
+{id:'F01',cat:'亲子',title:'今天带亨亨出门一小时，让她在家安静',how:'出门前跟她说一句"我带了"。',min:60,cost:0,tags:['独处时间','睡饱觉'],flags:['涉及亨亨','需要外出']},
+{id:'F02',cat:'亲子',title:'今晚的夜奶和哄睡全归我',how:'她今晚可以睡整觉。',min:60,cost:0,tags:['睡饱觉','独处时间'],flags:['涉及亨亨']},
+{id:'F03',cat:'亲子',title:'明天早上亨亨我全包，让她睡到自然醒',how:'醒了也别叫醒她。',min:60,cost:0,tags:['睡饱觉'],flags:['涉及亨亨']},
+{id:'F04',cat:'亲子',title:'学一项带娃技能，今天由我全流程做',how:'冲奶、洗澡、拍嗝任选一项。',min:40,cost:0,tags:['独处时间'],flags:['涉及亨亨']},
+{id:'F05',cat:'亲子',title:'给亨亨读一本绘本，她可以在旁边休息',how:'读的时候别喊她帮忙。',min:15,cost:0,tags:['独处时间'],flags:['涉及亨亨']},
+{id:'F06',cat:'亲子',title:'记录亨亨今天的一个新变化，念给她听',how:'哪怕只是表情变多了。',min:10,cost:0,tags:['拍照记录'],flags:['涉及亨亨']},
+{id:'F07',cat:'亲子',title:'今天换尿布全归我',how:'今天是爸爸日。',min:30,cost:0,tags:['独处时间'],flags:['涉及亨亨']},
+// G 独处
+{id:'G01',cat:'独处',title:'今天她可以不做任何家务，我直接说出口',how:'说清楚，别让她猜。',min:5,cost:0,tags:['独处时间'],flags:[]},
+{id:'G02',cat:'独处',title:'让她有一个完整的两小时自己支配',how:'这两小时家里的事都归你。',min:120,cost:0,tags:['独处时间'],flags:['涉及亨亨']},
+{id:'G03',cat:'独处',title:'支持她去见朋友，今天家里我全包',how:'提前帮她安排好，不催她回。',min:240,cost:0,tags:['独处时间','一起出门'],flags:['涉及亨亨']},
+{id:'G04',cat:'独处',title:'帮她约一次按摩、洗头或做指甲',how:'时间由她定，你负责接送。',min:90,cost:2,tags:['独处时间','收到小礼物'],flags:['需要外出']},
+{id:'G05',cat:'独处',title:'今天不安排任何事，她想干嘛干嘛',how:'包括什么都不干。',min:5,cost:0,tags:['独处时间','安静不被打扰'],flags:[]},
+{id:'G06',cat:'独处',title:'睡前十分钟：不聊娃、不聊钱、不聊工作',how:'就聊你们俩。',min:10,cost:0,tags:['有人陪聊','安静不被打扰'],flags:[]}
+];
+
+/* ============================================================
+   你们自己的那部分（可以随时改）
+   —— 10 条专属任务 + 3 个已经确定的重要日子
+   ============================================================ */
+const MY_LIB = [
+// —— 起点：2014 年那届世界杯
+{id:'M01',cat:'回忆',title:'把 2014 年那届世界杯翻出来，重看半场',how:'亨亨睡了之后，哪怕只看半场也好。',min:30,cost:0,tags:['惊喜和仪式感','有人陪聊'],flags:[]},
+{id:'M02',cat:'回忆',title:'把你们异国那几年发的消息翻出来，截一张发给她',how:'挑一张你自己都忘了的。',min:10,cost:0,tags:['拍照记录','惊喜和仪式感'],flags:[]},
+// —— 学长与助教
+{id:'M03',cat:'表达',title:'说清当年做她助教时，你第一次注意到她',how:'要具体到某一个瞬间，别用形容词。',min:5,cost:0,tags:['被夸/被说出来'],flags:[]},
+{id:'M04',cat:'表达',title:'用你们专业的黑话，写一句只有你们看得懂的话',how:'发给她，别解释。',min:5,cost:0,tags:['惊喜和仪式感','被夸/被说出来'],flags:[]},
+// —— 三年异国
+{id:'M05',cat:'关注',title:'问她：在新加坡那一年，哪一天最难熬',how:'听完别急着解释，就说一句"那时候辛苦你了"。',min:10,cost:0,tags:['有人陪聊'],flags:[]},
+{id:'M06',cat:'表达',title:'说清异地那三年里，你哪一次差点没撑住',how:'她当年撑得比你久，让她知道你也一样。',min:15,cost:0,tags:['被夸/被说出来','有人陪聊'],flags:[]},
+// —— 自己的家
+{id:'M07',cat:'表达',title:'说清当年买这套房子时，她哪件事做得对',how:'指出具体哪件事、为什么对。',min:10,cost:0,tags:['被夸/被说出来'],flags:[]},
+{id:'M08',cat:'分担',title:'她念叨过很久的那处家里改造，今天量好尺寸下单',how:'别再问"要不要弄"，直接弄。',min:30,cost:1,tags:['干净整洁的家','务实省钱'],flags:[]},
+// —— 保胎那半年
+{id:'M09',cat:'分担',title:'把她的复查约好，那天我陪着去',how:'别等她提。',min:30,cost:1,tags:['务实省钱'],flags:['需要外出']},
+{id:'M10',cat:'关注',title:'跟她说一句：亨亨出生那天，最辛苦的是你',how:'不是客套，是陈述事实。',min:5,cost:0,tags:['被夸/被说出来'],flags:[]},
+// —— 备用两条
+{id:'M11',cat:'回忆',title:'从相恋那一年开始，每年挑一张照片做成九宫格',how:'一张九宫格就是一个时代。',min:25,cost:0,tags:['拍照记录','惊喜和仪式感'],flags:[]},
+{id:'M12',cat:'回忆',title:'回一次交大，走到你们当年常去的那家店',how:'挑一个周末，亨亨交给爸妈。',min:120,cost:2,tags:['一起出门'],flags:['需要外出']}
+];
+
+/* 已经确定的三个日子（可以在「更多 → 重要日子」里改或删） */
+const MY_DAYS = [
+  {id:'m4', label:'相恋纪念日', kind:'anniversary', lunar:false, md:'06-21'},
+  {id:'m5', label:'领证纪念日', kind:'anniversary', lunar:false, md:'05-12'},
+  {id:'m6', label:'婚礼纪念日', kind:'anniversary', lunar:false, md:'09-12'},
+  {id:'m1', label:'搬进新家的日子', kind:'anniversary', lunar:false, md:'11-10'},
+  {id:'m2', label:'亨亨出生日',     kind:'birthday',    lunar:false, md:'12-04'},
+  {id:'m3', label:'去年今天，她在医院保胎', kind:'quiet', lunar:false, md:'07-30'}
+];
+const MY_BABY_BIRTHDAY = '2025-12-04';
+/* 她的生日：公历 10 月 7 日。年份只是占位——App 全程只用「月-日」，
+   在问卷里填成真实年份也不影响任何计算。 */
+const MY_BIRTHDAY = '1990-10-07';
+
+/* ---------- 1.4 把你们的过去慢慢问出来（一次一个问题） ----------
+   设计意图：不让人"填时间线"，而是每天顺手回答一个小问题。
+   答完立刻可以把它变成一件今天能做的事 —— 回答不是做作业，是换回一件小事。
+   阶段骨架：起点 → 分离 → 承诺 → 家 → 新生命                              */
+const STORY = [
+  {stage:'起点 · 交大', qs:[
+    {id:'s01', q:'你们第一次见面是在交大的哪个地方？她当时穿的什么颜色？', t:'带她回交大，走一遍你们第一次见面的那条路', min:120, cost:2},
+    {id:'s02', q:'你给她当助教的那个学期，第一次对她有印象是因为哪件事？', t:'说清当年做她助教时，你第一次注意到她', min:5, cost:0},
+    {id:'s03', q:'你们在一起那天是什么情形？2014 年世界杯的哪一场、在哪看的？', t:'把 2014 年那届世界杯翻出来，重看半场', min:30, cost:0},
+    {id:'s04', q:'追她的时候，你做过最傻的一件事是什么？', t:'把当年做过的傻事重新讲一遍，让她笑一次', min:10, cost:0},
+    {id:'s05', q:'在交大那几年，你们最常一起去的是哪个地方？'}
+  ]},
+  {stage:'分离 · 新加坡与美国', qs:[
+    {id:'s06', q:'她在 NUS 那一年，你们固定几点打电话或视频？'},
+    {id:'s07', q:'异国那三年多，你们一共见了几次？印象最深的是哪一次？', t:'把你们那几年见面的照片按时间排一次给她看', min:20, cost:0},
+    {id:'s08', q:'她一个人在新加坡的时候，有没有哪件事你一直没帮上忙？'},
+    {id:'s09', q:'异地那几年，你们发明过什么只有彼此懂的词或暗号？', t:'用你们当年那个暗号给她发一条消息', min:2, cost:0},
+    {id:'s10', q:'你去美国之后，最难熬的是哪一段时间？'}
+  ]},
+  {stage:'承诺 · 领证与婚礼', qs:[
+    {id:'s11', q:'决定领证的那天，她是什么反应？', t:'把领证那天的照片找出来发给她', min:10, cost:0},
+    {id:'s12', q:'领证当天，你们做的第一件事是什么？', t:'复刻一次领证当天做的第一件事', min:30, cost:1},
+    {id:'s13', q:'婚礼上你印象最深的一个瞬间是什么？', t:'把婚礼那天的照片挑一张洗出来挂在屋里', min:30, cost:1},
+    {id:'s14', q:'你心里"就是她了"是哪一刻？', t:'告诉她你心里"就是她了"的那一刻', min:5, cost:0}
+  ]},
+  {stage:'家 · 搬进新房', qs:[
+    {id:'s15', q:'搬进新家那天，你们做的第一件事是什么？', t:'复刻一次搬进新家那天做的第一件事', min:20, cost:0},
+    {id:'s16', q:'从看房到定下来，她做过的哪个决定是对的？', t:'说清当年买这套房子时她哪件事做得对', min:10, cost:0},
+    {id:'s17', q:'家里哪样东西是她坚持要买的？', t:'把她坚持要买的那样东西保养或归置一次', min:20, cost:0},
+    {id:'s18', q:'现在家里你最喜欢的一个角落是哪里？为什么？', t:'把家里那个角落收拾成她更喜欢的样子', min:30, cost:1}
+  ]},
+  {stage:'新生命 · 亨亨', qs:[
+    {id:'s19', q:'她告诉你怀孕的消息时，你们在哪、什么场景？', t:'跟她说一遍你听到怀孕消息时的第一反应', min:5, cost:0},
+    {id:'s20', q:'亨亨出生那天，你最记得的一个画面是什么？', t:'把亨亨出生那天的照片或视频找出来，一起看一次', min:15, cost:0},
+    {id:'s21', q:'亨亨出生后，她做过的哪件事让你意外？', t:'跟她说清当妈妈之后你最佩服她的一件事', min:5, cost:0},
+    {id:'s22', q:'现在最想让她少做的一件家务是什么？', t:'今天接手那件家务，让她一次都不用做', min:20, cost:0}
+  ]}
+];
+const STORY_ALL = STORY.reduce((a,s)=> a.concat(s.qs.map(q => Object.assign({stage:s.stage}, q))), []);
+
+/* 还差三个日期：填上之后，提前 7 天的准备提醒才会真正生效 */
+const PENDING_DAYS = [
+  {key:'birthday', label:'她的生日', hint:'最重要的一天，决定生日作战包什么时候出现', kind:'birthday', target:'profile'},
+  {key:'love',    label:'相恋纪念日', hint:'2014 年世界杯期间的哪一天', kind:'anniversary'},
+  {key:'marry',   label:'领证纪念日', hint:'恋爱的第 7 年（大约 2021）', kind:'anniversary'},
+  {key:'wedding', label:'婚礼纪念日', hint:'领证后第八年（大约 2022）', kind:'anniversary'}
+];
+
+/* 生日当天留给她的话：都是从你们自己的事里写的，选一句再改成自己的。
+   只使用你给过的事实（交大/助教/2014世界杯/NUS/美国/新房/保胎/亨亨出生），不编造细节。 */
+const BIRTHDAY_MESSAGES = [
+  {tag:'起点', text:'2014 年那届世界杯，看完那场球天就亮了。十二年过去，今天是咱们三个人的第一个生日——晚上亨亨睡了，我把剩下半场陪你补上。'},
+  {tag:'这一年', text:'亨亨出生这一年，你把这个家撑住了。今年是咱们三个人的第一个生日，今天什么都不用你操心。'},
+  {tag:'那段日子', warn:true, text:'去年那段时间，你在医院躺了那么久，我什么都替不了你。今年是咱们三个人的第一个生日，我只想让你今天什么都不用操心。'},
+  {tag:'最短', text:'今天什么都不用你做。'}
+];
+
+/* 生日当天与前一天：这两天不该再"随机"，该照单执行 */
+const BIRTHDAY_PACK = {
+  message: BIRTHDAY_MESSAGES[1].text,
+  eve: [
+    '蛋糕到手了吗（提前一天取，别当天去排队）',
+    '礼物藏好了吗（她现在真的会翻柜子）',
+    '明天谁带亨亨，跟爸妈确认过了吗',
+    '卡片写好了吗（手写，不是打印）',
+    '明天要用的东西今晚就摆好，早上不用翻箱'
+  ],
+  day: [
+    {time:'早上', text:'比她早起半小时：早餐做好，让她醒来只需要操心她自己'},
+    {time:'白天', text:'亨亨带出门两小时，或交给爸妈——她有一段完整属于自己的时间'},
+    {time:'傍晚', text:'蛋糕、卡片、一家三口的合影，三样都要有'},
+    {time:'晚上', text:'亨亨睡了之后，把 2014 年那届世界杯翻出来，看半场'}
+  ]
+};
+
+/* ---------- 1.5 专属日任务：节日当天与临近节日才进入候选 ---------- */
+const FEST_LIB = [
+{id:'V01',cat:'惊喜',fest:['valentine','qixi'],title:'订一次只属于两个人的晚餐',how:'今晚亨亨交给爸妈或月嫂，你们单独吃一次。',min:90,cost:2,tags:['惊喜和仪式感','美食','独处时间'],flags:['涉及亨亨']},
+{id:'V02',cat:'表达',fest:['valentine','qixi','520'],title:'写一张卡片，说清今年和去年有什么不一样',how:'一句话就行，但要具体。',min:15,cost:0,tags:['被夸/被说出来','惊喜和仪式感'],flags:[]},
+{id:'V03',cat:'惊喜',fest:['valentine','white','520','qixi'],title:'花要提前订，别当天现买',how:'提前订，当天准时送到她手上。',min:20,cost:1,tags:['收到小礼物','惊喜和仪式感'],flags:['需要外出']},
+{id:'V04',cat:'表达',fest:['520','valentine'],title:'发一个 520 红包，配一句只有你们懂的话',how:'金额不重要，那句话重要。',min:5,cost:1,tags:['惊喜和仪式感','被夸/被说出来'],flags:[]},
+{id:'V05',cat:'分担',fest:['520','valentine','white'],title:'今天晚饭我来做，菜是她爱吃的',how:'从买菜到洗碗全流程。',min:40,cost:1,tags:['美食','务实省钱'],flags:[]},
+{id:'V06',cat:'回忆',fest:['qixi','valentine'],title:'复刻一次你们刚在一起时做过的同一件小事',how:'同一家店、同一部电影都算。',min:60,cost:1,tags:['一起出门','惊喜和仪式感'],flags:[]},
+{id:'V07',cat:'独处',fest:['qixi','valentine','520'],title:'带她出门散一次步，手机留在家里',how:'不谈娃、不谈工作。',min:45,cost:0,tags:['一起出门','安静不被打扰'],flags:['需要外出']},
+{id:'V08',cat:'亲子',fest:['mothers'],title:'今天是母亲节：带娃全归我，她只做她自己',how:'一整天，包括夜奶。',min:240,cost:0,tags:['独处时间','睡饱觉'],flags:['涉及亨亨']},
+{id:'V09',cat:'亲子',fest:['mothers','children'],title:'让亨亨"送"她一样东西',how:'小手印卡片，或者爸爸代笔写一句。',min:30,cost:0,tags:['拍照记录','惊喜和仪式感'],flags:['涉及亨亨']},
+{id:'V10',cat:'分担',fest:['midautumn','spring','lantern'],title:'节礼提前送，她父母那边我来打电话',how:'别让她一个人张罗两边。',min:20,cost:1,tags:['务实省钱'],flags:['需要外出']},
+{id:'V11',cat:'回忆',fest:['xmas','newyear','spring'],title:'拍一张今年的"一家三口"年度合影',how:'今天拍完，今年就有一张了。',min:20,cost:0,tags:['拍照记录'],flags:['涉及亨亨']},
+{id:'V12',cat:'回忆',fest:['newyear','newyear1'],title:'一起写三件明年想一起做的事',how:'写下来，明年今天再打开看。',min:20,cost:0,tags:['惊喜和仪式感','有人陪聊'],flags:[]},
+{id:'V13',cat:'惊喜',fest:['children'],title:'给亨亨买玩具的时候，顺带给她也买一份',how:'不用贵，要像"顺带"其实是想到了。',min:25,cost:1,tags:['收到小礼物'],flags:['需要外出','涉及亨亨']},
+{id:'V14',cat:'独处',fest:['fathers'],title:'父亲节这天，我把娃带满一整天',how:'她的礼物就是不用管家里。',min:240,cost:0,tags:['独处时间','睡饱觉'],flags:['涉及亨亨']}
+];
+
+/* ---------- 1.6 准备类任务：重要日子前 7 天才进入候选 ---------- */
+const PREP_LIB = [
+{id:'P01',cat:'分担',prep:true,pri:3,title:'把当天的蛋糕订了（至少提前三天）',how:'直接订她爱吃的那家，不用问她。',min:30,cost:1,tags:['务实省钱'],flags:['需要外出']},
+{id:'P02',cat:'惊喜',prep:true,pri:3,title:'当天的安排今天定下来，位子也订好',how:'当天再想就来不及了。',min:30,cost:1,tags:['惊喜和仪式感'],flags:['需要外出']},
+{id:'P03',cat:'分担',prep:true,pri:2,title:'提前安排好那天谁带娃',how:'爸妈、月嫂，先问清楚。',min:20,cost:0,tags:['独处时间'],flags:[]},
+{id:'P04',cat:'惊喜',prep:true,pri:3,title:'礼物买好，别等到前一天',how:'下单今天完成。',min:40,cost:1,tags:['收到小礼物'],flags:['需要外出']},
+{id:'P05',cat:'表达',prep:true,pri:2,title:'卡片今天先写好，当天不用慌',how:'提前写反而更真。',min:15,cost:0,tags:['被夸/被说出来'],flags:[]},
+{id:'P06',cat:'分担',prep:true,pri:1,title:'那天提前请半天假',how:'现在就去提申请。',min:10,cost:0,tags:['务实省钱'],flags:[]},
+{id:'P07',cat:'惊喜',prep:true,pri:2,title:'布置要用的东西今天买齐',how:'气球、灯、她喜欢的那种小东西。',min:30,cost:1,tags:['惊喜和仪式感'],flags:['需要外出']},
+{id:'P08',cat:'关注',prep:true,pri:1,title:'用"我来安排"的方式，确认她那天空着',how:'别问"你要怎么过"，直接说你想安排。',min:10,cost:0,tags:['有人陪聊'],flags:[]}
+];
+
+/* ---------- 2. 选项词表 ---------- */
+const LIKES = ['被夸/被说出来','惊喜和仪式感','美食','拍照记录','收到小礼物','有人陪聊','独处时间','睡饱觉','一起出门','干净整洁的家','安静不被打扰','务实省钱'];
+const AVOIDS = ['别提身材体重','别提产后','别当众表白','别乱花钱','别在我忙时打扰','别评价我的外貌','别拿我和别人比','别只有节日才想起来'];
+const STAGES = ['产后恢复期','哺乳期','带娃期','上班 + 带娃','其他'];
+
+const CAT_META = {
+  '分担':{moodWeights:{'很累':2.5,'一般':0,'很好':0.5}},
+  '独处':{moodWeights:{'很累':2.5,'一般':0,'很好':0.5}},
+  '亲子':{moodWeights:{'很累':1.5,'一般':0,'很好':0.5}},
+  '关注':{moodWeights:{'很累':0.5,'一般':0,'很好':1.0}},
+  '表达':{moodWeights:{'很累':-0.5,'一般':0,'很好':1.0}},
+  '惊喜':{moodWeights:{'很累':-1.0,'一般':0,'很好':1.5}},
+  '回忆':{moodWeights:{'很累':-1.0,'一般':0,'很好':1.5}}
+};
+
+/* ---------- 2.5 农历与重要日子 ---------- */
+/* 农历数据表（1900-2049），标准实现，只用于把农历日期换算成公历 */
+const LUNAR_INFO = [
+0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,
+0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,
+0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,
+0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,
+0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,
+0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,
+0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,
+0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,
+0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,
+0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x05ac0,0x0ab60,0x096d5,0x092e0,
+0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,
+0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,
+0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,
+0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,
+0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,
+0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x0ea50,0x06b20,0x1a6c4,0x0aae0,
+0x0a2e0,0x0d2e3,0x0c960,0x0d557,0x0d4a0,0x0da50,0x05d55,0x056a0,0x0a6d0,0x055d4,
+0x052d0,0x0a9b8,0x0a950,0x0b4a0,0x0b6a6,0x0ad50,0x055a0,0x0aba4,0x0a5b0,0x052b0,
+0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,
+0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a2d0,0x0d150,0x0f252
+];
+function leapMonth(y){ return LUNAR_INFO[y - 1900] & 0xf; }
+function leapDays(y){ return leapMonth(y) ? ((LUNAR_INFO[y - 1900] & 0x10000) ? 30 : 29) : 0; }
+function monthDays(y,m){ return (LUNAR_INFO[y - 1900] & (0x10000 >> m)) ? 30 : 29; }
+function lunarYearDays(y){
+  let sum = 348;
+  for(let i = 0x8000; i > 0x8; i >>= 1){ sum += (LUNAR_INFO[y - 1900] & i) ? 1 : 0; }
+  return sum + leapDays(y);
+}
+function solarToLunar(y, m, d){
+  let offset = Math.floor((Date.UTC(y, m - 1, d) - Date.UTC(1900, 0, 31)) / 86400000);
+  let i, temp = 0;
+  for(i = 1900; i < 2050 && offset > 0; i++){ temp = lunarYearDays(i); offset -= temp; }
+  if(offset < 0){ offset += temp; i--; }
+  const year = i;
+  const leap = leapMonth(year);
+  let isLeap = false, j;
+  for(j = 1; j < 13 && offset > 0; j++){
+    if(leap > 0 && j === leap + 1 && !isLeap){ --j; isLeap = true; temp = leapDays(year); }
+    else { temp = monthDays(year, j); }
+    if(isLeap && j === leap + 1) isLeap = false;
+    offset -= temp;
+  }
+  if(offset === 0 && leap > 0 && j === leap + 1){
+    if(isLeap){ isLeap = false; } else { isLeap = true; --j; }
+  }
+  if(offset < 0){ offset += temp; --j; }
+  return { year, month: j, day: offset + 1, isLeap };
+}
+/* 农历 (月, 日) → 公历年内的公历日期；找不到返回 null */
+const _lunarCache = {};
+function lunarToSolar(ly, lm, ld){
+  const key = ly + '-' + lm + '-' + ld;
+  if(key in _lunarCache) return _lunarCache[key];
+  let found = null;
+  const start = Date.UTC(ly, 0, 20);
+  for(let i = 0; i < 400; i++){
+    const t = new Date(start + i * 86400000);
+    const Y = t.getUTCFullYear(), M = t.getUTCMonth() + 1, D = t.getUTCDate();
+    const l = solarToLunar(Y, M, D);
+    if(l.year === ly && l.month === lm && l.day === ld && !l.isLeap){ found = { y: Y, m: M, d: D }; break; }
+  }
+  _lunarCache[key] = found;
+  return found;
+}
+
+/* 内置节日：公历 / 农历 / 第 N 个星期几 */
+const FESTIVALS = [
+  {key:'newyear1',  label:'元旦',    month:1,  day:1,  tip:'新的一年，先给她一个好开头'},
+  {key:'valentine', label:'情人节',  month:2,  day:14, tip:'今天全世界都在提醒你，别装不知道'},
+  {key:'white',     label:'白色情人节', month:3, day:14, tip:'上个月她送过的，今天该你还了'},
+  {key:'womens',    label:'妇女节',  month:3,  day:8,  tip:'想清楚再出手，有人喜欢有人烦'},
+  {key:'mothers',   label:'母亲节',  month:5,  nth:2, weekday:0, tip:'她当妈妈之后的第一个专属节日'},
+  {key:'520',       label:'520',     month:5,  day:20, tip:'今年别只发一个红包了事'},
+  {key:'children',  label:'儿童节',  month:6,  day:1,  tip:'亨亨的节日，也是她当妈妈的节日'},
+  {key:'fathers',   label:'父亲节',  month:6,  nth:3, weekday:0, tip:'你的节日——让她省点事就是最好的礼物'},
+  {key:'xmas',      label:'圣诞节',  month:12, day:25, tip:'不一定要礼物，要有氛围'},
+  {key:'newyear',   label:'跨年',    month:12, day:31, tip:'今天适合说一句"明年也一起"'},
+  {key:'lantern',   label:'元宵节',  lunar:[1,15],  tip:'春节的最后一天，也是团圆的日子'},
+  {key:'qixi',      label:'七夕',    lunar:[7,7],   tip:'中国情人节，别让她提醒你'},
+  {key:'midautumn', label:'中秋节',  lunar:[8,15],  tip:'团圆的日子，家里人一起吃顿饭'},
+  {key:'spring',    label:'春节',    lunar:[1,1],   tip:'过年最累的是她，今天你多扛点'}
+];
+
+function nthWeekdayOfMonth(y, m, weekday, nth){
+  const first = new Date(y, m - 1, 1);
+  const shift = (weekday - first.getDay() + 7) % 7;
+  return 1 + shift + (nth - 1) * 7;
+}
+/* 某年某节日对应的公历日期（MM-DD），返回 null 表示该年算不出来 */
+function festivalSolarDate(f, year){
+  if(f.day) return { m: f.month, d: f.day };
+  if(f.nth !== undefined){
+    const d = nthWeekdayOfMonth(year, f.month, f.weekday, f.nth);
+    return { m: f.month, d };
+  }
+  if(f.lunar){
+    const s = lunarToSolar(year, f.lunar[0], f.lunar[1]);
+    return s ? { m: s.m, d: s.d } : null;
+  }
+  return null;
+}
+function mdOf(dateStr){ const d = parseDay(dateStr); return { m: d.getMonth()+1, d: d.getDate() }; }
+function nextSolarMMDD(dateStr, m, d){
+  const t = parseDay(dateStr);
+  let y = t.getFullYear();
+  if(t > new Date(y, m - 1, d)) y += 1;
+  return { date: todayStr(new Date(y, m - 1, d)), year: y };
+}
+/* 自定义重要日子 → 下一次出现的公历日期 */
+function nextCustomDate(dateStr, day){
+  const t = parseDay(dateStr);
+  const [m, d] = day.md.split('-').map(Number);
+  if(!day.lunar) return nextSolarMMDD(dateStr, m, d);
+  for(let k = 0; k < 2; k++){
+    const s = lunarToSolar(t.getFullYear() + k, m, d);
+    if(!s) continue;
+    const ds = todayStr(new Date(s.y, s.m - 1, s.d));
+    if(daysBetween(dateStr, ds) >= 0) return { date: ds, year: s.y };
+  }
+  return null;
+}
+/* 未来一段时间的全部重要日子（节日 + 她的生日/纪念日 + 自定义） */
+function upcomingDays(dateStr, horizon){
+  horizon = horizon || 400;
+  const t = parseDay(dateStr);
+  const out = [];
+  const push = (label, ds, meta) => {
+    if(!ds) return;
+    const dd = daysBetween(dateStr, ds);
+    if(dd < 0 || dd > horizon) return;
+    out.push(Object.assign({ label, date: ds, days: dd }, meta || {}));
+  };
+  // 节日：跨两年查，覆盖春节/元宵落在年初的情况
+  [t.getFullYear(), t.getFullYear() + 1].forEach(y => {
+    FESTIVALS.forEach(f => {
+      const s = festivalSolarDate(f, y);
+      if(!s) return;
+      push(f.label, todayStr(new Date(y, s.m - 1, s.d)), { kind:'festival', key:f.key, tip:f.tip });
+    });
+  });
+  const p = S.profile;
+  if(p.birthday){ const s = mdOf(p.birthday), n = nextSolarMMDD(dateStr, s.m, s.d); push(p.name + '的生日', n.date, { kind:'birthday', key:'birthday' }); }
+  if(p.anniversary){ const s = mdOf(p.anniversary), n = nextSolarMMDD(dateStr, s.m, s.d); push('结婚纪念日', n.date, { kind:'anniversary', key:'anniversary' }); }
+  (p.days || []).forEach(day => {
+    const n = nextCustomDate(dateStr, day);
+    if(n) push(day.label, n.date, { kind: day.kind, key: day.id, lunar: !!day.lunar });
+  });
+  out.sort((a, b) => a.days - b.days || (a.label > b.label ? 1 : -1));
+  // 同一天多个节日只保留第一个（避免重复提示）
+  const seen = {};
+  return out.filter(x => { const k = x.date + '|' + x.kind; if(seen[k]) return false; seen[k] = 1; return true; });
+}
+/* 今天的情境：今天是什么日子、哪些日子临近、是否需要安静 */
+function dayContext(dateStr){
+  const list = upcomingDays(dateStr, 8);
+  const today = list.filter(x => x.days === 0);
+  const prep = list.filter(x => x.days > 0 && x.days <= 7);
+  const quiet = today.some(x => x.kind === 'quiet');
+  return { list, today, prep, quiet };
+}
+
+/* ---------- 3. 状态与存储 ---------- */
+const KEY = 'todayforher.v1';
+
+/* 有些环境（无痕模式、某些 App 内置浏览器、部分 file:// 场景）不让写本机存储。
+   这时候必须当场告诉用户，而不是等他记录了一周之后发现全没了。 */
+let STORAGE_OK = true;
+try{
+  localStorage.setItem('__tfh_probe','1');
+  localStorage.removeItem('__tfh_probe');
+}catch(e){ STORAGE_OK = false; }
+function storageWarning(){
+  if(STORAGE_OK) return '';
+  return '<div class="card" style="border-color:#EFD5CC;background:#FFF6F3">'
+    + '<h3>这台设备现在存不下数据</h3>'
+    + '<div class="muted">浏览器限制了本机存储，你做的记录在关闭页面后可能丢失。两个办法：'
+    + '① 用系统浏览器（Safari / Chrome）通过<b>网址</b>打开这个页面，别从文件里直接点开；'
+    + '② 每次用完在「更多 → 导出数据」里存一份 JSON。</div>'
+    + '</div>';
+}
+
+function todayStr(d){
+  d = d || new Date();
+  const p = n => String(n).padStart(2,'0');
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());
+}
+function parseDay(s){ const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); }
+function daysBetween(a,b){ return Math.round((parseDay(b)-parseDay(a))/86400000); }
+
+function defaultState(){
+  return {
+    onboarded:false,
+    profile:{
+      name:'她', birthday:'', anniversary:'', babyBirthday:'',
+      timeBudget:30, costBudget:2, likes:[], avoid:[], stage:'带娃期', custom:[], days:[]
+    },
+    mood:{},        // { '2026-10-07':'很累' }
+    done:[],        // [{date,id,title,cat,note,react}]
+    picks:{},       // { '2026-10-07':{id, reroll} }
+    banned:[],      // 任务 id，被标记"不合适"
+    story:{answers:{}, skipped:[], on:{}},   // 把你们的过去问出来的答案
+    checks:{},      // 生日清单的打勾状态
+    createdAt: todayStr()
+  };
+}
+
+let S = load();
+/* 预览模式（#demo / #demo-birthday / #demo-eve）：只改内存、不落盘，避免看演示时覆盖掉真实数据 */
+const DEMO_HASHES = ['#demo', '#demo-birthday', '#demo-eve'];
+let DEMO = (typeof location !== 'undefined' && DEMO_HASHES.includes(location.hash));
+function load(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    const d = defaultState();
+    if(!raw) return d;
+    const o = JSON.parse(raw);
+    return Object.assign(d, o, {
+      profile: Object.assign(d.profile, o.profile || {}),
+      story: Object.assign(d.story, o.story || {})
+    });
+  }catch(e){ return defaultState(); }
+}
+function save(){
+  if(DEMO) return;
+  try{ localStorage.setItem(KEY, JSON.stringify(S)); }
+  catch(e){ STORAGE_OK = false; toast('这台设备存不下数据，建议用网址打开'); }
+}
+
+function library(){
+  return LIB.concat(MY_LIB, (S.profile.custom||[]).map((t,i)=>({
+    id:'U'+i, cat:'分担', title:t.title, how:t.how||'', min:t.min||15, cost:t.cost||0, tags:['务实省钱'], flags:[]
+  })));
+}
+
+/* ---------- 4. 推荐引擎 ---------- */
+function mulberry32(a){
+  return function(){
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function seededShuffle(arr, seed){
+  const rnd = mulberry32(seed), a = arr.slice();
+  for(let i=a.length-1;i>0;i--){ const j = Math.floor(rnd()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+function lastDoneIndex(){
+  const m = {};
+  S.done.forEach(r=>{ const g = daysBetween(r.date, todayStr()); if(m[r.id]===undefined || g < m[r.id]) m[r.id] = g; });
+  return m;
+}
+function specialKind(date){
+  const p = S.profile, d = parseDay(date), md = [d.getMonth()+1, d.getDate()].join('-');
+  if(p.birthday && [parseDay(p.birthday).getMonth()+1, parseDay(p.birthday).getDate()].join('-') === md) return 'birthday';
+  if(p.anniversary && [parseDay(p.anniversary).getMonth()+1, parseDay(p.anniversary).getDate()].join('-') === md) return 'anniversary';
+  if(p.babyBirthday){
+    const b = parseDay(p.babyBirthday), months = (d.getFullYear()-b.getFullYear())*12 + (d.getMonth()-b.getMonth());
+    if(d.getDate()===b.getDate() && months>0 && months<=36) return 'babymonth';
+  }
+  return null;
+}
+function candidates(date, ctx){
+  const mood = S.mood[date] || '一般';
+  const {timeBudget, costBudget, avoid, stage} = S.profile;
+  const recent = lastDoneIndex();
+  const maxMin = mood === '很累' ? Math.min(timeBudget||999, 30) : (timeBudget || 999);
+  ctx = ctx || dayContext(date);
+
+  // 专属日任务：节日前后 7 天内、以及重要日子临近时的准备任务
+  const extra = [];
+  if(!ctx.quiet){
+    ctx.list.filter(x => x.days <= 7).forEach(x => {
+      if(x.kind === 'festival') FEST_LIB.forEach(t => { if(t.fest.includes(x.key)) extra.push(t); });
+    });
+    if(ctx.prep.length || ctx.today.length) PREP_LIB.forEach(t => extra.push(t));
+  }
+  const seenId = {};
+  const pool = library().concat(extra).filter(t => { if(seenId[t.id]) return false; seenId[t.id] = 1; return true; });
+
+  // 安静日：不推任何"制造惊喜"的任务，只留下能做的那类
+  const quietBan = ['惊喜','表达','回忆'];
+
+  return pool.filter(t=>{
+    if(S.banned.includes(t.id)) return false;
+    if(recent[t.id] !== undefined && recent[t.id] < 14) return false;
+    if(t.min > maxMin) return false;
+    if(t.cost > costBudget) return false;
+    if(avoid.includes('别乱花钱') && t.cost > 0) return false;
+    if(stage === '产后恢复期' && (t.flags.includes('需要外出') || t.flags.includes('需要体力'))) return false;
+    if(t.flags.includes('需要她配合')) return false;
+    if(ctx.quiet && quietBan.includes(t.cat)) return false;
+    return true;
+  });
+}
+function scoreOf(t, date, ctx){
+  const mood = S.mood[date] || '一般';
+  const sp = specialKind(date);
+  ctx = ctx || dayContext(date);
+  const recent = lastDoneIndex();
+  let s = 1.0, reasons = [];
+
+  const hitLikes = t.tags.filter(x=>S.profile.likes.includes(x));
+  s += 2.0 * hitLikes.length;
+  if(hitLikes.length) reasons.push('你喜欢的方式里有「'+hitLikes[0]+'」');
+
+  const hitAvoid = t.tags.filter(x=>S.profile.avoid.includes(x));
+  s -= 3.0 * hitAvoid.length;
+
+  s += (CAT_META[t.cat] ? CAT_META[t.cat].moodWeights[mood] : 0);
+
+  if(mood === '很累' && ['分担','独处','亲子'].includes(t.cat)) reasons.push('她说今天很累，先把事接过来最有用');
+  if(mood === '很好' && ['回忆','惊喜','表达'].includes(t.cat)) reasons.push('她今天状态不错，可以做点有仪式感的');
+
+  if(sp === 'birthday' && ['惊喜','回忆','表达'].includes(t.cat)){ s += 4.0; reasons.push('今天是她的生日'); }
+  if(sp === 'anniversary' && ['回忆','表达'].includes(t.cat)){ s += 4.0; reasons.push('今天是你们的纪念日'); }
+  if(sp === 'babymonth' && t.flags.includes('涉及亨亨')){ s += 4.0; reasons.push('亨亨今天满月龄，拍点东西留下来'); }
+
+  const g = recent[t.id];
+  if(g !== undefined){ if(g>=31) { s += 1.0; } else if(g>=15) { s += 0.5; } }
+
+  if(S.profile.stage === '产后恢复期' && t.flags.includes('需要体力')) s -= 2.0;
+  if(S.profile.stage === '哺乳期' && t.flags.includes('需要外出')) s -= 1.0;
+
+  // 节日当天 / 临近
+  if(t.fest){
+    const now = ctx.today.find(x => x.kind === 'festival' && t.fest.includes(x.key));
+    const near = ctx.list.find(x => x.kind === 'festival' && t.fest.includes(x.key));
+    if(now){ s += 5.0; reasons.unshift('今天是' + now.label); }
+    else if(near){ s += 2.0; reasons.unshift(near.label + '还有 ' + near.days + ' 天'); }
+  }
+  // 重要日子前的准备
+  if(t.prep){
+    const nx = ctx.prep[0] || ctx.today[0];
+    if(nx){
+      s += 3.0 + (t.pri || 0) * 0.6;
+      reasons.unshift(nx.days === 0 ? ('今天就是' + nx.label) : ('距离' + nx.label + '还有 ' + nx.days + ' 天，先准备'));
+    }
+  }
+  if(ctx.quiet) reasons.unshift('今天不适合搞惊喜，安静地做点实事');
+
+  if(!reasons.length){
+    reasons.push(t.cat === '分担' ? '今天能替她省一件心' : '换一种方式让她知道你在');
+  }
+  return {s, reasons};
+}
+function pick(date, reroll){
+  const ctx = dayContext(date);
+  const cands = candidates(date, ctx);
+  if(!cands.length) return {task:null, why:'任务库今天没有合适的了，去「更多」里加一条专属的。'};
+  const scored = cands.map(t=>{ const r = scoreOf(t, date, ctx); return {t, s:r.s, reasons:r.reasons}; })
+                      .sort((a,b)=> b.s - a.s);
+  // 取分数最高的前 8 条，再用"当天日期"作种子的抖动排序：
+  // 分数决定大体顺序（今天最该做的那件排前面），抖动带来变化（不会每天都是同一件）。
+  const top = scored.slice(0, Math.min(8, scored.length));
+  const seed = parseInt(date.replace(/-/g,''),10) || 20261007;
+  const rnd = mulberry32(seed);
+  const ranked = top.map(x => ({ t: x.t, why: x.reasons, k: x.s + rnd() * 0.9 }))
+                    .sort((a,b)=> b.k - a.k);
+  const idx = Math.min(reroll||0, ranked.length-1);
+  const chosen = ranked[idx];
+  return {task:chosen.t, why:(chosen.why || []).slice(0,2).join('，')};
+}
+function todayPick(){
+  const d = todayStr();
+  if(!S.picks[d]) S.picks[d] = {reroll:0};
+  const p = pick(d, S.picks[d].reroll);
+  return {date:d, ...p, reroll:S.picks[d].reroll};
+}
+
+/* ---------- 5. 工具 ---------- */
+function h(str){ return String(str==null?'':str).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function esc(s){ return h(s); }
+function toast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('on');
+  clearTimeout(el._t); el._t = setTimeout(()=>el.classList.remove('on'), 1800);
+}
+function openSheet(html){
+  document.getElementById('sheetInner').innerHTML = html;
+  document.getElementById('sheet').classList.add('on');
+}
+function closeSheet(){ document.getElementById('sheet').classList.remove('on'); }
+document.getElementById('sheet').addEventListener('click', e=>{ if(e.target.id==='sheet') closeSheet(); });
+function confetti(){
+  const colors = ['#E4795F','#F3C6B6','#C9A227','#5B9A7E','#F0BCAA'];
+  for(let i=0;i<42;i++){
+    const el = document.createElement('div');
+    el.className = 'confetti';
+    el.style.left = Math.random()*100 + 'vw';
+    el.style.background = colors[i%colors.length];
+    el.style.animationDuration = (2.2 + Math.random()*1.8) + 's';
+    el.style.animationDelay = (Math.random()*.6) + 's';
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(), 5200);
+  }
+}
+function fmtDate(s){
+  const d = parseDay(s), w = ['日','一','二','三','四','五','六'][d.getDay()];
+  return (d.getMonth()+1)+' 月 '+d.getDate()+' 日 · 周'+w;
+}
+function fmtShort(s){
+  const d = parseDay(s);
+  return (d.getMonth()+1)+' 月 '+d.getDate()+' 日';
+}
+function nextOccur(dateStr){
+  if(!dateStr) return null;
+  const t = parseDay(todayStr()), o = parseDay(dateStr);
+  let next = new Date(t.getFullYear(), o.getMonth(), o.getDate());
+  if(daysBetween(todayStr(), todayStr(next)) < 0) next = new Date(t.getFullYear()+1, o.getMonth(), o.getDate());
+  return {days: daysBetween(todayStr(), todayStr(next)), md:(o.getMonth()+1)+' 月 '+o.getDate()+' 日'};
+}
+function yearsSince(dateStr){
+  if(!dateStr) return 0;
+  const a = parseDay(dateStr), t = parseDay(todayStr());
+  let y = t.getFullYear() - a.getFullYear();
+  if(t.getMonth() < a.getMonth() || (t.getMonth() === a.getMonth() && t.getDate() < a.getDate())) y -= 1;
+  return Math.max(0, y);
+}
+/* ---------- 「你们的过去」问答 ---------- */
+function nextStoryQ(){
+  const st = S.story || (S.story = {answers:{}, skipped:[], on:{}});
+  st.answers = st.answers || {}; st.skipped = st.skipped || [];
+  let q = STORY_ALL.find(x => !st.answers[x.id] && !st.skipped.includes(x.id));
+  if(!q){
+    const left = STORY_ALL.filter(x => !st.answers[x.id]);
+    if(left.length){ st.skipped = []; q = left[0]; }
+  }
+  return q || null;
+}
+function storyProgress(){
+  const a = (S.story && S.story.answers) || {};
+  return { done: STORY_ALL.filter(x => a[x.id]).length, total: STORY_ALL.length };
+}
+function streak(){
+  const days = new Set(S.done.map(r=>r.date));
+  let n = 0, cur = new Date();
+  if(!days.has(todayStr(cur))) cur.setDate(cur.getDate()-1);
+  while(days.has(todayStr(cur))){ n++; cur.setDate(cur.getDate()-1); }
+  return n;
+}
+function last7(){
+  const out = [];
+  for(let i=0;i<7;i++){ const d = new Date(); d.setDate(d.getDate()-i); out.push(todayStr(d)); }
+  return S.done.filter(r=>out.includes(r.date)).length;
+}
+
+/* ---------- 6. 渲染 ---------- */
+const app = document.getElementById('app');
+let TAB = 'today';
+
+function render(){
+  if(!S.onboarded){ app.innerHTML = viewOnboard(); afterOnboard(); return; }
+  app.innerHTML = viewShell();
+  bind();
+}
+
+function viewOnboard(){
+  const step = window.__step || 0;
+  const steps = ONBOARD_STEPS.length;
+  const dots = Array.from({length:steps}, (_,i)=>'<div class="dot'+(i<=step?' on':'')+'"></div>').join('');
+  return '<div class="onboard fade">'
+    + '<div class="dots">'+dots+'</div>'
+    + '<div class="grow">'+ONBOARD_STEPS[step]()+'</div>'
+    + '<div class="row" style="margin-top:20px">'
+      + (step>0 ? '<button class="btn ghost" data-act="ob-back">上一步</button>' : '')
+      + '<button class="btn primary" data-act="ob-next">'+(step===steps-1?'开始第一件小事':'继续')+'</button>'
+    + '</div></div>';
+}
+
+const ob = {name:'', birthday:'', anniversary:'', babyBirthday:'', timeBudget:30, costBudget:2, likes:[], avoid:[], stage:'带娃期'};
+
+const ONBOARD_STEPS = [
+  () => '<h2>这是给一个人做的 App</h2>'
+    + '<p class="lead">它每天只做一件事：告诉你今天能为她做的那件小事。</p>'
+    + '<label>你平时怎么叫她</label><input type="text" id="ob-name" value="'+esc(ob.name||'')+'" placeholder="她 / 老婆 / 名字 / 小名">',
+
+  () => '<h2>她的生日</h2>'
+    + '<p class="lead">有这一天，App 会提前换成生日模式。</p>'
+    + '<input type="date" id="ob-birthday" value="'+esc(ob.birthday || MY_BIRTHDAY)+'">',
+
+  () => '<h2>你们的纪念日</h2>'
+    + '<p class="lead">在一起的、结婚的，选一个你更在意的。没有可以跳过。</p>'
+    + '<input type="date" id="ob-anniversary" value="'+esc(ob.anniversary)+'">',
+
+  () => '<h2>亨亨的生日</h2>'
+    + '<p class="lead">到了月龄节点会推荐一家三口的事。</p>'
+    + '<input type="date" id="ob-baby" value="'+esc(ob.babyBirthday || MY_BABY_BIRTHDAY)+'">',
+
+  () => '<h2>每天大概能花多少时间</h2>'
+    + '<p class="lead">宁可定小一点。5 分钟做完，比 1 小时没做成有用。</p>'
+    + '<div class="chips" data-group="timeBudget">'
+    + [5,15,30,60,999].map(v=>'<div class="chip'+(ob.timeBudget===v?' on':'')+'" data-val="'+v+'">'+(v===999?'不限':(v>=60?'1 小时':v+' 分钟'))+'</div>').join('')
+    + '</div>',
+
+  () => '<h2>花钱这件事</h2>'
+    + '<p class="lead">有些人喜欢收到东西，有些人觉得浪费。选她那边。</p>'
+    + '<div class="chips" data-group="costBudget">'
+    + [[0,'尽量不花钱'],[1,'小额可以'],[2,'不看价格']].map(([v,l])=>'<div class="chip'+(ob.costBudget===v?' on':'')+'" data-val="'+v+'">'+l+'</div>').join('')
+    + '</div>',
+
+  () => '<h2>她喜欢哪种被在乎</h2>'
+    + '<p class="lead">多选。选得越准，推荐越像量身定做。</p>'
+    + '<div class="chips" data-group="likes">'
+    + LIKES.map(v=>'<div class="chip'+(ob.likes.includes(v)?' on':'')+'" data-val="'+v+'">'+v+'</div>').join('')
+    + '</div>',
+
+  () => '<h2>这几件事不要做</h2>'
+    + '<p class="lead">选中的会直接从推荐里排除，不会出现在任何一天。</p>'
+    + '<div class="chips" data-group="avoid">'
+    + AVOIDS.map(v=>'<div class="chip'+(ob.avoid.includes(v)?' on':'')+'" data-val="'+v+'">'+v+'</div>').join('')
+    + '</div>',
+
+  () => '<h2>她现在大概是什么阶段</h2>'
+    + '<p class="lead">这会决定推荐有多"轻"。</p>'
+    + '<div class="chips" data-group="stage">'
+    + STAGES.map(v=>'<div class="chip'+(ob.stage===v?' on':'')+'" data-val="'+v+'">'+v+'</div>').join('')
+    + '</div>'
+    + '<div class="card flat" style="margin-top:6px"><div class="muted">一切都可以之后再改。她随时可以多一条黑名单。</div></div>'
+];
+
+function collectOnboard(){
+  const g = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+  if(document.getElementById('ob-name')) ob.name = g('ob-name');
+  if(document.getElementById('ob-birthday')) ob.birthday = g('ob-birthday');
+  if(document.getElementById('ob-anniversary')) ob.anniversary = g('ob-anniversary');
+  if(document.getElementById('ob-baby')) ob.babyBirthday = g('ob-baby');
+}
+function afterOnboard(){
+  document.querySelectorAll('.chips[data-group]').forEach(box=>{
+    box.addEventListener('click', e=>{
+      const chip = e.target.closest('.chip'); if(!chip) return;
+      const group = box.dataset.group, val = chip.dataset.val;
+      if(group === 'likes' || group === 'avoid'){
+        const arr = group === 'likes' ? ob.likes : ob.avoid;
+        const i = arr.indexOf(val); i<0 ? arr.push(val) : arr.splice(i,1);
+        chip.classList.toggle('on');
+      } else {
+        ob[group] = group === 'stage' ? val : Number(val);
+        box.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+        chip.classList.add('on');
+      }
+    });
+  });
+}
+
+function viewShell(){
+  const p = S.profile;
+  const head = {
+    today: ['今天为'+p.name+'做一件小事', fmtDate(todayStr())],
+    log:   ['记录', '你已经做过的'],
+    her:   [p.name, '关于她的一切'],
+    more:  ['更多', '设置与数据']
+  }[TAB];
+  return ''
+  + '<div class="topbar"><div><h1>'+esc(head[0])+' <span class="heart" style="font-size:15px;color:#E4795F">&hearts;</span></h1>'
+  + '<div class="sub">'+esc(head[1])+'</div></div></div>'
+  + '<div class="scroll">'+({today:viewToday,log:viewLog,her:viewHer,more:viewMore}[TAB])()+'</div>'
+  + tabbar();
+}
+function tabbar(){
+  const ic = {
+    today:'<path d="M12 20s-7-4.35-7-9.5A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 7 3.5C19 15.65 12 20 12 20z"/>',
+    log:'<path d="M4 6h16M4 12h16M4 18h10"/>',
+    her:'<circle cx="12" cy="8" r="3.2"/><path d="M5.5 19c.8-3.4 3.4-5 6.5-5s5.7 1.6 6.5 5"/>',
+    more:'<circle cx="12" cy="12" r="2.4"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2 2M16.4 16.4l2 2M18.4 5.6l-2 2M7.6 16.4l-2 2"/>'
+  };
+  const names = {today:'今天',log:'记录',her:S.profile.name,more:'更多'};
+  return '<div class="tabbar">'+['today','log','her','more'].map(k=>
+    '<div class="tab'+(TAB===k?' on':'')+'" data-tab="'+k+'"><svg viewBox="0 0 24 24">'+ic[k]+'</svg>'+esc(names[k])+'</div>'
+  ).join('')+'</div>';
+}
+
+/* --- 今天 --- */
+function viewToday(){
+  const t = todayPick();
+  const d = t.date, mood = S.mood[d] || '一般';
+  const sp = specialKind(d);
+  const ctx = dayContext(d);
+  const total = S.done.length;
+  const doneToday = S.done.some(r=>r.date===d);
+
+  let html = '';
+
+  html += storageWarning();
+
+  // 她的生日没填，整套生日功能都不会触发——这件事必须在首页提醒
+  if(!S.profile.birthday){
+    html += '<div class="card flat" style="border-style:solid;border-color:#F0DFD2;background:#FFFBF7">'
+      + '<h3>还差她的生日</h3>'
+      + '<div class="muted">填上之后，那天会自动切成生日作战包：前一晚的确认清单、当天的四段安排。去「更多 → 还差 N 个日期」。</div>'
+      + '</div>';
+  }
+
+  if(ctx.quiet){
+    const q = ctx.today.find(x=>x.kind==='quiet') || {label:'这个日子'};
+    html += '<div class="card flat" style="border-style:solid;border-color:#E7E0DA;background:#FAF8F6">'
+      + '<h3>今天是「'+esc(q.label)+'」</h3>'
+      + '<div class="muted">今天不需要特别的事，也不用准备惊喜。安静地做点实事，陪着就好。</div>'
+      + '</div>';
+  } else {
+    if(ctx.today.some(x=>x.key==='birthday')) html += birthdayPackCard();
+    const eve = ctx.list.find(x=>x.key==='birthday' && x.days===1);
+    if(eve) html += birthdayEveCard(eve, false);
+    else {
+      // 生日当天：昨天要是没来得及，这五项今天必须补上，否则当天会手忙脚乱
+      const bd = ctx.today.find(x=>x.key==='birthday');
+      if(bd) html += birthdayEveCard(bd, true);
+    }
+    const an = ctx.today.find(x=>x.kind==='anniversary');
+    if(an){
+      const y = yearsSince(S.profile.anniversary);
+      html += '<div class="card flat" style="border-style:solid;border-color:#F6E1D6;background:#FFFBF7">'
+        + '<div class="muted">今天是你们的纪念日'+(y?('，第 '+y+' 年'):'')+'。今天的推荐偏向"一起做一件事"。</div></div>';
+    }
+    ctx.today.filter(x=>x.kind==='festival').forEach(f=>{
+      html += '<div class="card today-card" style="background:linear-gradient(160deg,#FFFBF6,#FFF0E7)">'
+        + '<div class="today-cat">今 天 是 '+esc(f.label)+'</div>'
+        + '<div class="today-title">'+esc(f.tip || '今天有一件事值得做')+'</div>'
+        + '<div class="today-how">下面这张卡是按今天挑的。</div>'
+        + '</div>';
+    });
+    if(ctx.prep.length){
+      html += '<div class="card flat" style="border-style:solid;border-color:#F1E7DE;background:#FFFCF9">'
+        + '<div class="muted">'+ctx.prep.slice(0,3).map(x=>'距离'+esc(x.label)+'还有 '+x.days+' 天').join(' · ')+'</div>'
+        + '<div class="muted" style="margin-top:6px">所以今天多推了几件"先准备"的事。</div>'
+        + '</div>';
+    }
+  }
+
+  html += '<div class="card"><h3>她今天状态怎么样？</h3><div class="moodpills">'
+    + ['很好','一般','很累'].map(m=>'<div class="mood'+(mood===m?' on':'')+'" data-mood="'+m+'">'+m+'</div>').join('')
+    + '</div><div class="muted" style="margin-top:10px">说出来，今天的推荐会跟着变。</div></div>';
+
+  if(doneToday){
+    const rec = S.done.find(r=>r.date===d);
+    html += '<div class="card fade" style="background:#F3F8F5;border-color:#DCEBE1">'
+      + '<div class="today-cat" style="color:#3F7A61">今 天 已 经 记 下 了</div>'
+      + '<div class="tl-title" style="font-size:17px">'+esc(rec.title)+'</div>'
+      + (rec.note?'<div class="tl-note">'+esc(rec.note)+'</div>':'')
+      + '<div class="divider"></div>'
+      + '<div class="muted">明天早上再来。</div>'
+      + '</div>'
+      + '<div class="daycount">这是第 '+total+' 件小事</div>';
+    return html;
+  }
+
+  if(!t.task){
+    html += '<div class="card flat"><div class="muted">'+esc(t.why)+'</div></div>';
+  } else {
+    html += '<div class="card today-card fade">'
+      + '<div class="today-cat">今 日 小 事 · '+esc(t.task.cat)+'</div>'
+      + '<div class="today-title">'+esc(t.task.title)+'</div>'
+      + (t.task.how ? '<div class="today-how">'+esc(t.task.how)+'</div>' : '')
+      + '<div class="meta">'
+        + '<span class="tag">'+(t.task.min? (t.task.min>=60? (t.task.min/60)+' 小时左右' : t.task.min+' 分钟') : '今天一整天')+'</span>'
+        + '<span class="tag grey">'+(t.task.cost===0?'不花钱':(t.task.cost===1?'小额':'看情况'))+'</span>'
+        + (t.task.flags.includes('涉及亨亨')?'<span class="tag green">带上亨亨</span>':'')
+        + (t.task.flags.includes('需要外出')?'<span class="tag grey">需要出门</span>':'')
+      + '</div>'
+      + '<div class="why">为什么是今天：'+esc(t.why)+'</div>'
+      + '</div>'
+      + '<div class="daycount">这是第 '+(total+1)+' 件小事</div>'
+      + '<button class="btn primary" data-act="done">做完了</button>'
+      + '<div class="row" style="margin-top:10px">'
+        + '<button class="btn ghost" data-act="reroll">换一个</button>'
+        + '<button class="btn ghost" data-act="ban">今天不合适</button>'
+      + '</div>';
+  }
+  return html;
+}
+
+/* --- 记录 --- */
+function birthdayPackCard(){
+  const key = 'bd-' + todayStr();
+  const ck = S.checks || {};
+  const msg = S.profile.bdayMessage || BIRTHDAY_PACK.message;
+  const doneN = BIRTHDAY_PACK.day.filter((x,i)=> ck[key+'-'+i]).length;
+  return '<div class="card today-card" style="background:linear-gradient(160deg,#FFF9F2,#FFEDE4)">'
+    + '<div class="today-cat">今 天 是 她 的 生 日</div>'
+    + '<div class="today-title">今天不推荐小事，今天推荐你。</div>'
+    + '<div class="today-how">这是留给她的话。改成你自己写的，别用模板：</div>'
+    + '<div class="why">「'+esc(msg)+'」</div>'
+    + '<div class="row" style="margin-top:12px">'
+      + '<button class="btn ghost" data-act="pick-bday-msg">换一句</button>'
+      + '<button class="btn ghost" data-act="edit-bday-msg">自己写</button>'
+    + '</div>'
+    + '</div>'
+    + '<div class="card"><h3>今天的安排 · '+doneN+' / '+BIRTHDAY_PACK.day.length+'</h3>'
+    + '<div class="muted" style="margin-bottom:10px">今天不用想，照着做就行。做完打勾。</div>'
+    + BIRTHDAY_PACK.day.map((it,i)=>{
+        const k = key + '-' + i;
+        return '<div class="chk'+(ck[k]?' on':'')+'" data-check="'+k+'">'
+          + '<span class="box">'+(ck[k]?'✓':'')+'</span>'
+          + '<div><b>'+esc(it.time)+'</b> · '+esc(it.text)+'</div></div>';
+      }).join('')
+    + '</div>';
+}
+function birthdayEveCard(bd, isToday){
+  const key = 'eve-' + bd.date;
+  const ck = S.checks || {};
+  const doneN = BIRTHDAY_PACK.eve.filter((x,i)=> ck[key+'-'+i]).length;
+  return '<div class="card" style="border-color:#F1DFD4;background:#FFFCF9">'
+    + '<h3>'+(isToday ? ('今天的后勤 · '+doneN+' / '+BIRTHDAY_PACK.eve.length)
+                      : ('明天是'+esc(bd.label)+' · '+doneN+' / '+BIRTHDAY_PACK.eve.length))+'</h3>'
+    + '<div class="muted" style="margin-bottom:10px">'
+      + (isToday ? '昨天没来得及的，现在补。这五件任何一件留到晚上，都会毁掉当天的心情。'
+                 : '今天必须确认完这五件事。明天你只负责陪她。')
+    + '</div>'
+    + BIRTHDAY_PACK.eve.map((text,i)=>{
+        const k = key + '-' + i;
+        return '<div class="chk'+(ck[k]?' on':'')+'" data-check="'+k+'">'
+          + '<span class="box">'+(ck[k]?'✓':'')+'</span><div>'+esc(text)+'</div></div>';
+      }).join('')
+    + '</div>';
+}
+
+function viewLog(){
+  const total = S.done.length;
+  if(!total){
+    return '<div class="card flat" style="margin-top:20px"><div class="muted">还没有记录。<br>今天做一件，这里就有第一天了。</div></div>';
+  }
+  const byDate = {};
+  S.done.slice().sort((a,b)=> a.date < b.date ? 1 : -1).forEach(r=>{ (byDate[r.date] = byDate[r.date] || []).push(r); });
+  let html = '<div class="card"><div class="row">'
+    + '<div class="stat"><div class="n">'+total+'</div><div class="l">件小事</div></div>'
+    + '<div class="stat"><div class="n">'+streak()+'</div><div class="l">天没有断</div></div>'
+    + '<div class="stat"><div class="n">'+last7()+'</div><div class="l">近 7 天</div></div>'
+    + '</div></div>';
+  const first = S.done.map(r=>r.date).sort()[0];
+  html += '<div class="card flat"><div class="muted">从 '+fmtShort(first)+' 开始，到今天一共 '+(daysBetween(first,todayStr())+1)+' 天。</div></div>';
+  html += Object.keys(byDate).map(date=>'<div class="card"><div class="tl">'
+    + byDate[date].map(r=>'<div class="tl-item">'
+        + '<div class="tl-date">'+fmtDate(date)+' · '+esc(r.cat||'')+'</div>'
+        + '<div class="tl-title">'+esc(r.title)+'</div>'
+        + (r.note?'<div class="tl-note">'+esc(r.note)+'</div>':'')
+        + (r.react?'<div class="muted" style="margin-top:2px">'+esc(r.react)+'</div>':'')
+      + '</div>').join('')
+    + '</div></div>').join('');
+  return html;
+}
+
+/* --- 她 --- */
+function viewHer(){
+  const p = S.profile;
+  let html = '<div class="card">'
+    + '<h2 style="font-size:19px">'+esc(p.name)+'</h2>'
+    + '<div class="muted">当前阶段：'+esc(p.stage)+'</div>'
+    + '<div class="divider"></div>';
+
+  if(p.babyBirthday){
+    const days = daysBetween(p.babyBirthday, todayStr());
+    const bd = parseDay(p.babyBirthday), td = parseDay(todayStr());
+    const months = (td.getFullYear()-bd.getFullYear())*12 + (td.getMonth()-bd.getMonth()) - (td.getDate()<bd.getDate()?1:0);
+    html += kv('亨亨', days+' 天 · '+months+' 个月');
+  }
+  html += '</div>';
+
+  const ups = upcomingDays(todayStr(), 150).slice(0, 10);
+  html += '<div class="card"><h3>接下来的重要日子</h3>';
+  if(!ups.length){
+    html += '<div class="muted">还没有记录。在「更多」里加上你们的纪念日和她家里人的生日。</div>';
+  } else {
+    ups.forEach(x => {
+      const right = x.days === 0
+        ? '<span class="tag">今天</span>'
+        : (x.days + ' 天' + (x.days <= 7 ? ' <span class="tag">该准备了</span>' : ''));
+      html += '<div class="kv"><span class="muted" style="font-size:14px">'+esc(x.label)
+        + (x.lunar ? ' <span class="tag grey" style="font-size:10px">农历</span>' : '')
+        + '</span><span class="v" style="font-size:14px;font-weight:500">'+right+'</span></div>';
+    });
+  }
+  html += '</div>';
+
+  html += '<div class="card"><h3>她在乎的</h3>';
+  html += '<div>'+(p.likes.length ? p.likes.map(x=>'<span class="tag">'+esc(x)+'</span>').join('') : '<span class="muted">还没选</span>')+'</div>';
+  html += '<div class="divider"></div><h3>绝不做的</h3>';
+  html += '<div>'+(p.avoid.length ? p.avoid.map(x=>'<span class="tag grey">'+esc(x)+'</span>').join('') : '<span class="muted">还没选</span>')+'</div>';
+  if(S.banned.length) html += '<div class="divider"></div><h3>已经排除的小事</h3><div class="muted">'+S.banned.length+' 条被标记为「不合适」，不会再出现。</div>';
+  html += '</div>';
+
+  // 把你们的过去慢慢问出来
+  const sp2 = storyProgress();
+  const q = nextStoryQ();
+  html += '<div class="card"><h3>你们的过去 · '+sp2.done+' / '+sp2.total+'</h3>';
+  if(q){
+    html += '<div class="muted" style="margin-bottom:10px">一次只问一个，随时可以跳过。答完可以顺手把它变成一件小事。</div>'
+      + '<div class="why" style="margin-bottom:12px">'+esc(q.q)+'</div>'
+      + '<button class="btn ghost" data-act="story-open">回答这个问题</button>';
+  } else {
+    html += '<div class="muted">都答完了。这些答案会一直留在这一页，也会继续变成新的专属任务。</div>';
+  }
+  const answered = STORY_ALL.filter(x => S.story.answers[x.id]);
+  if(answered.length){
+    html += '<div class="divider"></div>';
+    let lastStage = '';
+    answered.forEach(x => {
+      if(x.stage !== lastStage){
+        lastStage = x.stage;
+        html += '<div class="muted" style="margin:10px 0 4px;font-size:11.5px;letter-spacing:3px">'+esc(x.stage)+'</div>';
+      }
+      html += '<div style="padding:6px 0;border-bottom:1px solid #F7EFE9">'
+        + '<div class="muted" style="font-size:12.5px">'+esc(x.q)+'</div>'
+        + '<div style="font-size:14.5px">'+esc(S.story.answers[x.id])+'</div></div>';
+    });
+  }
+  html += '</div>';
+
+  html += '<button class="btn ghost" data-act="edit-profile">改一下她的画像</button>';
+  return html;
+}
+function kv(k,v){ return '<div class="kv"><span class="muted" style="font-size:14px">'+esc(k)+'</span><span class="v">'+esc(v)+'</span></div>'; }
+
+/* --- 更多 --- */
+function viewMore(){
+  return storageWarning()
+  + '<div class="card"><h3>加一条专属小事</h3>'
+    + '<div class="muted" style="margin-bottom:10px">只有你知道的、任务库里没有的事，加进来后就会进入推荐。</div>'
+    + '<input type="text" id="custom-title" placeholder="例如：把她的车加满油">'
+    + '<button class="btn ghost" data-act="add-custom">加进任务库</button>'
+  + '</div>'
+  + '<div class="card"><h3>重要日子</h3>'
+    + '<div class="muted" style="margin-bottom:10px">生日和纪念日在引导里填过了，这里可以加领证日、她家里人的生日。重要日子前 7 天，App 会自动开始推"先准备"的事；标记成「回避日」的日子，当天不推任何惊喜。</div>'
+    + (S.profile.days || []).map(x =>
+        '<div class="kv"><span style="font-size:14.5px">'+esc(x.label)
+        + (x.lunar ? ' <span class="tag grey" style="font-size:10px">农历</span>' : '')
+        + '</span><span><button data-del="'+esc(x.id)+'" style="border:none;background:none;color:#B0A49C;font-size:13px;font-family:inherit;padding:4px 2px">删除</button></span></div>'
+      ).join('')
+    + '<div class="divider"></div>'
+    + '<input type="text" id="day-label" placeholder="例如：领证纪念日 / 她妈妈的生日">'
+    + '<input type="date" id="day-date">'
+    + '<select id="day-kind">'
+      + '<option value="anniversary">纪念日</option>'
+      + '<option value="birthday">生日</option>'
+      + '<option value="family">家人相关的日子</option>'
+      + '<option value="quiet">回避日（当天不推惊喜）</option>'
+    + '</select>'
+    + '<label style="display:flex;align-items:flex-start;gap:8px;font-size:13.5px;color:var(--ink-2)">'
+      + '<input type="checkbox" id="day-lunar" style="width:auto;margin:3px 0 0">'
+      + '<span>农历日子（勾上后，日期按月-日当作农历填：七月初七就选 7 月 7 日）</span>'
+    + '</label>'
+    + '<div style="height:12px"></div>'
+    + '<button class="btn ghost" data-act="add-day">加进去</button>'
+  + '</div>'
+  + pendingDaysCard()
+  + '<div class="card"><h3>数据</h3>'
+    + '<div class="muted" style="margin-bottom:12px">所有数据只存在这台设备上，不上传、不联网。换手机前记得导出。</div>'
+    + '<button class="btn ghost" data-act="export-ics" style="margin-bottom:9px">导出到手机日历（.ics）</button>'
+    + '<div class="muted" style="margin-bottom:12px;font-size:12.5px">导出的日历文件里，她的生日和纪念日会在<b>提前 7 天、提前 1 天、当天早上 9 点</b>各提醒你一次；节日只提前一天提醒。用手机点开这个文件就能导入系统日历，这是目前最可靠的提醒方式。</div>'
+    + '<button class="btn ghost" data-act="export" style="margin-bottom:9px">导出数据（JSON）</button>'
+    + '<button class="btn ghost" data-act="share">生成今日分享卡</button>'
+  + '</div>'
+  + '<div class="card"><h3>关于</h3>'
+    + '<div class="muted">今天为她 · Phase 1<br>单文件 PWA，可添加到手机主屏幕离线使用。<br>'
+    + '任务库 '+library().length+' 条（含 '+MY_LIB.length+' 条专属），另有节日任务 '+FEST_LIB.length+' 条、准备类 '+PREP_LIB.length+' 条。<br>'
+    + '推荐由她的画像、当天状态、临近的重要日子共同决定。</div>'
+  + '</div>'
+  + '<button class="btn danger" data-act="reset">清空所有数据</button>'
+  + '<div style="height:10px"></div>';
+}
+function pendingDaysCard(){
+  // 已经填过就不要再催：既认「点过填上」的，也认预置/手动加的（按标签匹配）
+  const filled = d => d.target === 'profile'
+    ? !!S.profile[d.key]
+    : (S.profile.days || []).some(x => x.id === 'p_' + d.key || x.label === d.label);
+  const left = PENDING_DAYS.filter(d => !filled(d));
+  if(!left.length) return '';
+  return '<div class="card" style="border-color:#F1DFD4;background:#FFFCF9">'
+    + '<h3>还差 '+left.length+' 个日期</h3>'
+    + '<div class="muted" style="margin-bottom:12px">这三个日子填上，提前 7 天的准备提醒才会生效。选一次就行。</div>'
+    + left.map(d =>
+        '<label>'+esc(d.label)+' <span class="muted" style="font-size:12px">'+esc(d.hint)+'</span></label>'
+        + '<div class="row" style="margin-bottom:4px">'
+          + '<input type="date" id="pd-'+d.key+'" style="margin-bottom:0">'
+          + '<button class="btn ghost" data-fill="'+d.key+'" style="flex:0 0 84px;padding:12px 0;font-size:14px">填上</button>'
+        + '</div>'
+      ).join('')
+    + '</div>';
+}
+
+/* ---------- 7. 交互 ---------- */
+function bind(){
+  document.querySelectorAll('[data-tab]').forEach(el=>{
+    el.onclick = ()=>{ TAB = el.dataset.tab; render(); window.scrollTo(0,0); };
+  });
+  document.querySelectorAll('[data-mood]').forEach(el=>{
+    el.onclick = ()=>{ S.mood[todayStr()] = el.dataset.mood; save(); render(); };
+  });
+  document.querySelectorAll('[data-act]').forEach(el=>{
+    el.onclick = ()=> handle(el.dataset.act);
+  });
+  document.querySelectorAll('[data-del]').forEach(el=>{
+    el.onclick = ()=>{
+      S.profile.days = (S.profile.days || []).filter(x => x.id !== el.dataset.del);
+      save(); render(); toast('已删除');
+    };
+  });
+  document.querySelectorAll('[data-fill]').forEach(el=>{
+    el.onclick = ()=>{
+      const key = el.dataset.fill;
+      const def = PENDING_DAYS.find(d => d.key === key);
+      if(!def) return;
+      const v = ((document.getElementById('pd-' + key) || {}).value || '').trim();
+      if(!v){ toast('先选一个日期'); return; }
+      const parts = v.split('-');
+      if(def.target === 'profile'){
+        S.profile[def.key] = v;              // 她的生日要存完整日期
+        save(); render(); toast(def.label + ' 填好了，生日当天会切到作战包');
+        return;
+      }
+      S.profile.days = S.profile.days || [];
+      S.profile.days.push({
+        id: 'p_' + key, label: def.label, kind: def.kind, lunar: false,
+        md: String(parts[1]).padStart(2,'0') + '-' + String(parts[2]).padStart(2,'0')
+      });
+      save(); render(); toast(def.label + ' 已加入重要日子');
+    };
+  });
+  document.querySelectorAll('[data-check]').forEach(el=>{
+    el.onclick = ()=>{
+      S.checks = S.checks || {};
+      S.checks[el.dataset.check] = !S.checks[el.dataset.check];
+      save(); render();
+    };
+  });
+}
+function handle(act){
+  if(act === 'ob-back'){ window.__step = Math.max(0,(window.__step||0)-1); render(); return; }
+  if(act === 'ob-next'){ return onboardNext(); }
+  if(act === 'reroll'){
+    const d = todayStr();
+    if((S.picks[d].reroll||0) >= 2){ toast('今天就先这一件吧'); return; }
+    S.picks[d].reroll = (S.picks[d].reroll||0)+1; save(); render(); return;
+  }
+  if(act === 'ban'){
+    const t = todayPick();
+    if(t.task && !S.banned.includes(t.task.id)) S.banned.push(t.task.id);
+    const d = todayStr();
+    if((S.picks[d].reroll||0) < 2) S.picks[d].reroll = (S.picks[d].reroll||0)+1;
+    save(); toast('已排除这件事'); render(); return;
+  }
+  if(act === 'done'){ return askDone(); }
+  if(act === 'save-done'){ return saveDone(); }
+  if(act === 'story-open'){ return openStorySheet(); }
+  if(act === 'story-save'){ return saveStory(); }
+  if(act === 'edit-bday-msg'){
+    openSheet(
+      '<h2>留给她的话</h2>'
+      + '<div class="muted" style="margin-bottom:12px">生日当天显示在首页最上面。写你自己的话，别用模板。</div>'
+      + '<textarea id="bday-msg" style="min-height:140px">'+esc(S.profile.bdayMessage || BIRTHDAY_PACK.message)+'</textarea>'
+      + '<button class="btn primary" id="bday-save">保存</button>'
+      + '<button class="btn text" id="bday-cancel">取消</button>'
+    );
+    document.getElementById('bday-save').onclick = ()=>{
+      const v = ((document.getElementById('bday-msg') || {}).value || '').trim();
+      if(!v){ toast('写一句吧'); return; }
+      S.profile.bdayMessage = v; save(); closeSheet(); render(); toast('改好了');
+    };
+    document.getElementById('bday-cancel').onclick = closeSheet;
+    return;
+  }
+  if(act === 'pick-bday-msg'){
+    openSheet(
+      '<h2>选一句</h2>'
+      + '<div class="muted" style="margin-bottom:14px">都是从你们自己的事里写的。选一句，或者点「自己写」。</div>'
+      + BIRTHDAY_MESSAGES.map((m,i)=>
+          '<div class="chk" data-bmsg="'+i+'"><div>'
+          + '<div style="font-size:11.5px;color:#A99C93;letter-spacing:1.5px;margin-bottom:4px">'+esc(m.tag)
+          + (m.warn ? ' · 她不愿提那段就选别的' : '') + '</div>'
+          + '<div>'+esc(m.text)+'</div></div></div>').join('')
+      + '<div style="height:6px"></div>'
+      + '<button class="btn ghost" id="bmsg-own">我自己写</button>'
+      + '<button class="btn text" id="bmsg-cancel">取消</button>'
+    );
+    document.querySelectorAll('[data-bmsg]').forEach(el=>{
+      el.onclick = ()=>{
+        S.profile.bdayMessage = BIRTHDAY_MESSAGES[+el.dataset.bmsg].text;
+        save(); closeSheet(); render(); toast('换好了，还可以再改');
+      };
+    });
+    document.getElementById('bmsg-own').onclick = ()=>{ closeSheet(); handle('edit-bday-msg'); };
+    document.getElementById('bmsg-cancel').onclick = closeSheet;
+    return;
+  }
+  if(act === 'edit-profile'){
+    const p = S.profile;
+    ob.name = (p.name === '她' ? '' : p.name);
+    ob.birthday = p.birthday || ''; ob.anniversary = p.anniversary || ''; ob.babyBirthday = p.babyBirthday || '';
+    ob.timeBudget = p.timeBudget || 30; ob.costBudget = p.costBudget == null ? 2 : p.costBudget;
+    ob.likes = (p.likes || []).slice(); ob.avoid = (p.avoid || []).slice(); ob.stage = p.stage || '带娃期';
+    window.__step = 0; S.onboarded = false; render(); return;
+  }
+  if(act === 'export'){ return exportData(); }
+  if(act === 'export-ics'){ return exportICS(); }
+  if(act === 'share'){ return shareCard(); }
+  if(act === 'add-custom'){
+    const el = document.getElementById('custom-title'); const v = el ? el.value.trim() : '';
+    if(!v){ toast('先写点什么'); return; }
+    S.profile.custom = S.profile.custom || []; S.profile.custom.push({title:v, min:15, cost:0});
+    save(); toast('已加进任务库'); render(); return;
+  }
+  if(act === 'add-day'){
+    const label = ((document.getElementById('day-label')||{}).value || '').trim();
+    const datev = ((document.getElementById('day-date')||{}).value || '').trim();
+    const kind = ((document.getElementById('day-kind')||{}).value || 'anniversary');
+    const lunar = !!(document.getElementById('day-lunar')||{}).checked;
+    if(!label || !datev){ toast('标签和日期都要填'); return; }
+    const parts = datev.split('-');
+    S.profile.days = S.profile.days || [];
+    S.profile.days.push({
+      id: 'd' + Date.now(), label: label, kind: kind, lunar: lunar,
+      md: String(parts[1]).padStart(2,'0') + '-' + String(parts[2]).padStart(2,'0')
+    });
+    save(); toast('已加入重要日子'); render(); return;
+  }
+  if(act === 'reset'){
+    if(confirm('会清空所有记录和她的一切设置，确定吗？')){
+      localStorage.removeItem(KEY); S = defaultState(); ob.name=''; window.__step = 0; render();
+    }
+    return;
+  }
+}
+function onboardNext(){
+  collectOnboard();
+  const last = ONBOARD_STEPS.length - 1;
+  if((window.__step||0) < last){ window.__step = (window.__step||0)+1; render(); window.scrollTo(0,0); return; }
+  S.profile = Object.assign(S.profile, {
+    name: ob.name || '她', birthday: ob.birthday, anniversary: ob.anniversary,
+    babyBirthday: ob.babyBirthday || S.profile.babyBirthday || MY_BABY_BIRTHDAY,
+    timeBudget: ob.timeBudget, costBudget: ob.costBudget, likes: ob.likes.slice(), avoid: ob.avoid.slice(), stage: ob.stage
+  });
+  S.onboarded = true;
+  ob.name = ''; ob.birthday=''; ob.anniversary=''; ob.babyBirthday=''; ob.likes=[]; ob.avoid=[];
+  save(); window.__step = 0; render();
+  setTimeout(()=>toast('她自己也不知道有这个东西'), 400);
+}
+function askDone(){
+  const t = todayPick();
+  if(!t.task){ toast('今天没有任务'); return; }
+  openSheet(
+    '<h2>记一句就好</h2>'
+    + '<div class="muted" style="margin-bottom:12px">'+esc(t.task.title)+'</div>'
+    + '<textarea id="done-note" placeholder="她说了什么 / 你当时什么感觉（可以不写）"></textarea>'
+    + '<label>她今天的反应</label>'
+    + '<div class="chips" data-react>'
+    + ['她笑了','她说谢谢','她有点意外','她没什么反应','她好像松口气'].map(x=>'<div class="chip" data-val="'+x+'">'+x+'</div>').join('')
+    + '</div>'
+    + '<button class="btn primary" data-act="save-done">记下来</button>'
+    + '<button class="btn text" id="sheet-cancel">取消</button>'
+  );
+  document.getElementById('sheet-cancel').onclick = closeSheet;
+  document.querySelectorAll('[data-react] .chip').forEach(c=>{
+    c.onclick = ()=>{ document.querySelectorAll('[data-react] .chip').forEach(x=>x.classList.remove('on')); c.classList.add('on'); };
+  });
+  // 顶部的"记下来"用的是 data-act，绑定丢失，这里重新挂
+  const btn = document.querySelector('[data-act="save-done"]');
+  if(btn) btn.onclick = saveDone;
+}
+function saveDone(){
+  const t = todayPick();
+  const note = (document.getElementById('done-note')||{}).value || '';
+  const reactEl = document.querySelector('[data-react] .chip.on');
+  const react = reactEl ? reactEl.dataset.val : '';
+  S.done.push({date:t.date, id:t.task.id, title:t.task.title, cat:t.task.cat, note:note.trim(), react:react});
+  save(); closeSheet(); confetti(); render();
+  setTimeout(()=>toast('第 '+S.done.length+' 件，记下了'), 300);
+  // 顺手问一个"你们的过去"的问题（一天最多一次，带跳过）
+  setTimeout(()=>{
+    if(!((S.story.on||{})[todayStr()]) && nextStoryQ()) openStorySheet();
+  }, 1500);
+}
+function openStorySheet(){
+  const q = nextStoryQ();
+  if(!q){ toast('都答完了'); return; }
+  window.__storyQ = q.id;
+  openSheet(
+    '<h2>'+esc(q.stage)+'</h2>'
+    + '<div class="muted" style="margin-bottom:12px">'+esc(q.q)+'</div>'
+    + '<textarea id="story-a" placeholder="随便写两句就行，不用写好看"></textarea>'
+    + '<button class="btn primary" data-act="story-save">记下来</button>'
+    + '<button class="btn text" id="story-skip">这个问题跳过</button>'
+  );
+  const saveBtn = document.querySelector('[data-act="story-save"]');
+  if(saveBtn) saveBtn.onclick = saveStory;
+  document.getElementById('story-skip').onclick = ()=>{
+    const st = S.story;
+    if(!st.skipped.includes(q.id)) st.skipped.push(q.id);
+    save(); closeSheet(); render();
+  };
+}
+function saveStory(){
+  const q = STORY_ALL.find(x => x.id === window.__storyQ) || nextStoryQ();
+  if(!q) return;
+  const v = ((document.getElementById('story-a')||{}).value || '').trim();
+  if(!v){ toast('写一句就行'); return; }
+  S.story.answers = S.story.answers || {};
+  S.story.answers[q.id] = v;
+  S.story.on = S.story.on || {};
+  S.story.on[todayStr()] = (S.story.on[todayStr()] || 0) + 1;
+  save();
+  if(q.t){
+    openSheet(
+      '<h2>要不要把它变成一件小事？</h2>'
+      + '<div class="muted" style="margin-bottom:12px">根据你刚写的这条，可以生成：</div>'
+      + '<div class="why" style="margin-bottom:14px">'+esc(q.t)+'</div>'
+      + '<button class="btn primary" data-act="story-make">好，加进任务库</button>'
+      + '<button class="btn text" id="story-no">先不用</button>'
+    );
+    const mk = document.querySelector('[data-act="story-make"]');
+    if(mk) mk.onclick = ()=>{
+      S.profile.custom = S.profile.custom || [];
+      S.profile.custom.push({title:q.t, min:q.min||15, cost:q.cost||0});
+      save(); closeSheet(); render(); toast('已加进任务库');
+    };
+    document.getElementById('story-no').onclick = ()=>{ closeSheet(); render(); };
+  } else {
+    closeSheet(); render(); toast('记下了，这会一直留在这里');
+  }
+}
+function exportData(){
+  const blob = new Blob([JSON.stringify(S,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'today-for-her-'+todayStr()+'.json';
+  a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 3000);
+  toast('已导出');
+}
+
+/* ---------- 导出到手机日历（.ics）——没有服务器也能有提醒 ---------- */
+function p2(n){ return String(n).padStart(2,'0'); }
+function icsStamp(d){
+  return d.getUTCFullYear()+p2(d.getUTCMonth()+1)+p2(d.getUTCDate())+'T'
+       + p2(d.getUTCHours())+p2(d.getUTCMinutes())+p2(d.getUTCSeconds())+'Z';
+}
+function icsEsc(s){
+  return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\r?\n/g,'\\n');
+}
+function icsEvent(uid, dateStr, title, desc, alarms, rrule){
+  const d = parseDay(dateStr);
+  const day = d.getFullYear()+p2(d.getMonth()+1)+p2(d.getDate());
+  let out = 'BEGIN:VEVENT\r\n'
+    + 'UID:'+uid+'\r\n'
+    + 'DTSTAMP:'+icsStamp(new Date())+'\r\n'
+    + 'DTSTART:'+day+'T090000\r\n'
+    + 'DTEND:'+day+'T100000\r\n'
+    + 'SUMMARY:'+icsEsc(title)+'\r\n';
+  if(desc) out += 'DESCRIPTION:'+icsEsc(desc)+'\r\n';
+  if(rrule) out += 'RRULE:'+rrule+'\r\n';
+  (alarms||[]).forEach(a=>{
+    out += 'BEGIN:VALARM\r\nACTION:DISPLAY\r\nTRIGGER:'+a+'\r\n'
+      + 'DESCRIPTION:'+icsEsc(title)+'\r\nEND:VALARM\r\n';
+  });
+  return out + 'END:VEVENT\r\n';
+}
+/* 妇女节不导出：有人喜欢被过节，有人反感，不适合默认塞进她的日历 */
+const REMIND_FESTIVALS = FESTIVALS.map(f => f.key).filter(k => k !== 'womens');
+function buildICS(){
+  const today = todayStr();
+  const A3 = ['-P7D','-P1D','PT0S'], A1 = ['-P1D'];
+  let out = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//TodayForHer//CN\r\n'
+          + 'CALSCALE:GREGORIAN\r\nMETHOD:PUBLISH\r\nX-WR-CALNAME:'+icsEsc('今天为她')+'\r\n';
+
+  const lunarFest = key => {
+    const f = FESTIVALS.find(x => x.key === key);
+    if(!f || !f.lunar) return null;
+    const base = parseDay(today).getFullYear();
+    const list = [];
+    for(let k = -1; k <= 4; k++){
+      const s = festivalSolarDate(f, base + k);
+      if(!s) continue;
+      const ds = todayStr(new Date(base + k, s.m - 1, s.d));
+      if(ds >= today) list.push(ds);
+    }
+    return list.slice(0, 3);
+  };
+
+  upcomingDays(today, 400).forEach(x => {
+    const tip = x.tip || '';
+    if(x.kind === 'festival'){
+      if(!REMIND_FESTIVALS.includes(x.key)) return;
+      const l = lunarFest(x.key);
+      if(l){                                   // 农历节日：逐年日期不同，导出未来三次
+        l.forEach(ds => { out += icsEvent('tfh-'+x.key+'-'+ds.replace(/-/g,'')+'@todayforher', ds, x.label, tip+'（提前一天提醒）', A1, null); });
+      } else {
+        out += icsEvent('tfh-'+x.key+'@todayforher', x.date, x.label, tip+'（提前一天提醒）', A1, 'FREQ=YEARLY');
+      }
+      return;
+    }
+    if(x.kind === 'quiet'){
+      out += icsEvent('tfh-'+x.key+'@todayforher', x.date, x.label+'（今天不安排惊喜）',
+        '这天不要安排惊喜和庆祝。安静地陪着，做点实事就好。', A1, x.lunar ? null : 'FREQ=YEARLY');
+      return;
+    }
+    // 她的生日 / 纪念日 / 家人相关的日子：提前 7 天、提前 1 天、当天 09:00 各提醒一次
+    const isBday = x.key === 'birthday';
+    out += icsEvent('tfh-'+x.key+'@todayforher', x.date, x.label,
+      (isBday ? '今天是她的生日。打开「今天为她」，照着作战包做：早上早起半小时、白天带娃两小时、傍晚三件套、晚上看半场世界杯。'
+              : '打开「今天为她」，看今天的安排。'),
+      A3, x.lunar ? null : 'FREQ=YEARLY');
+  });
+  return out + 'END:VCALENDAR\r\n';
+}
+function exportICS(){
+  const blob = new Blob([buildICS()], {type:'text/calendar;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'today-for-her-'+todayStr()+'.ics';
+  a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 3000);
+  toast('已导出，用手机打开导入日历');
+}
+function shareCard(){
+  const t = todayPick();
+  if(!t.task){ toast('没有可分享的内容'); return; }
+  openSheet(
+    '<div class="share-card"><div class="wm">&hearts;</div>'
+    + '<div class="d">'+fmtDate(t.date)+'</div>'
+    + '<div class="t">'+esc(t.task.title)+'</div>'
+    + '<div class="muted" style="font-size:13px">第 '+(S.done.length+1)+' 件小事 · 给'+esc(S.profile.name)+'</div>'
+    + '<div class="f">今天为她 · 截图存下来</div>'
+    + '</div>'
+    + '<div style="height:14px"></div>'
+    + '<button class="btn ghost" id="sheet-cancel2">关掉</button>'
+  );
+  document.getElementById('sheet-cancel2').onclick = closeSheet;
+}
+
+/* ---------- 8. 启动 ---------- */
+(function seedMine(){
+  // 首次运行：把你自己的重要日子放进「她」页（只做一次，之后可以在「更多」里改）
+  try{
+    if(DEMO || S.seeded) return;
+    S.profile.days = (S.profile.days || []).concat(MY_DAYS.filter(d => !(S.profile.days || []).some(x => x.label === d.label)));
+    if(!S.profile.babyBirthday) S.profile.babyBirthday = MY_BABY_BIRTHDAY;
+    if(!S.profile.birthday) S.profile.birthday = MY_BIRTHDAY;
+    S.seeded = true;
+    save();
+  }catch(e){}
+})();
+(function demoSeed(){
+  // 预览模式：地址后面加 #demo（用过一阵子）/ #demo-birthday（生日当天）/ #demo-eve（生日前一天）
+  try{
+    if(!DEMO_HASHES.includes(location.hash)) return;
+    const back = n => { const d = new Date(); d.setDate(d.getDate()-n); return todayStr(d); };
+    S = defaultState();
+    S.seeded = true;
+    S.onboarded = true;
+    const bday = location.hash === '#demo-birthday' ? todayStr()
+               : location.hash === '#demo-eve'      ? back(-1)
+               : back(-5);
+    S.profile = {
+      name:'老婆', birthday: bday, anniversary:'2019-10-01', babyBirthday: back(392),
+      timeBudget:30, costBudget:2,
+      likes:['被夸/被说出来','独处时间','睡饱觉','拍照记录','美食'],
+      avoid:['别提身材体重','别乱花钱'],
+      stage:'带娃期', custom:[],
+      days:[
+        {id:'m4', label:'相恋纪念日', kind:'anniversary', lunar:false, md:'06-21'},
+        {id:'m5', label:'领证纪念日', kind:'anniversary', lunar:false, md:'05-12'},
+        {id:'m6', label:'婚礼纪念日', kind:'anniversary', lunar:false, md:'09-12'},
+        {id:'m1', label:'搬进新家的日子', kind:'anniversary', lunar:false, md:'11-10'},
+        {id:'m2', label:'亨亨出生日', kind:'birthday', lunar:false, md:'12-04'}
+      ]
+    };
+    S.mood = { [todayStr()]:'一般', [back(1)]:'很累' };
+    S.done = [
+      {date:back(1), id:'F02', title:'今晚的夜奶和哄睡全归我', cat:'亲子', note:'她睡了整整七个小时', react:'她好像松口气'},
+      {date:back(3), id:'A01', title:'今晚的碗我洗，她不许进厨房', cat:'分担', note:'', react:'她笑了'},
+      {date:back(5), id:'B04', title:'给亨亨拍一张和妈妈的合影，当场给她看', cat:'关注', note:'她说这张要留着', react:'她说谢谢'},
+      {date:back(9), id:'G05', title:'今天不安排任何事，她想干嘛干嘛', cat:'独处', note:'她自己看了两小时剧', react:'她笑了'}
+    ];
+    S.picks = {};
+    S.story = { answers:{
+      s01:'交大闵行校区，她那天穿一件米色外套，我记得特别清楚',
+      s02:'那学期她交作业总是最后一个交，后来才知道是怕写错',
+      s03:'2014 年世界杯，凌晨那场，看完天就亮了',
+      s06:'新加坡跟国内没有时差，我们固定晚上十一点'
+    }, skipped:[], on:{} };
+  }catch(e){}
+})();
+render();
+/* 调试/预览接口：供 tools/preview.html 驱动，正常使用不影响任何行为 */
+window.TFH = {
+  go(tab){ TAB = ['today','log','her','more'].includes(tab) ? tab : 'today'; render(); top0(); },
+  state(){ return S; },
+  set(patch){ Object.assign(S.profile, patch || {}); save(); render(); top0(); },
+  done(){ handle('done'); },
+  share(){ handle('share'); },
+  story(){ openStorySheet(); },
+  bdayMsg(){ handle('pick-bday-msg'); },
+  setStorage(v){ STORAGE_OK = !!v; render(); }
+};
+function top0(){ const el = document.querySelector('.scroll'); if(el) el.scrollTop = 0; }
+try{
+  if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+    navigator.serviceWorker.register('sw.js')
+      .then(() => { if(window.TFH) TFH.swReady = true; })
+      .catch(() => { if(window.TFH) TFH.swReady = 'failed'; });
+  }
+}catch(e){}
+</script>
+</body>
+</html>

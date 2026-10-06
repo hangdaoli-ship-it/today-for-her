@@ -1,0 +1,16 @@
+{
+  "name": "今天为她",
+  "short_name": "今天为她",
+  "description": "每天告诉你，今天能为她做的那一件小事。",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFF7F2",
+  "theme_color": "#FFF7F2",
+  "lang": "zh-CN",
+  "icons": [
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
