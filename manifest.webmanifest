@@ -1,6 +1,6 @@
 {
-  "name": "予伊",
-  "short_name": "予伊",
+  "name": "予卿",
+  "short_name": "予卿",
   "description": "每天告诉你，今天能为她做的那一件小事。",
   "start_url": "./index.html",
   "scope": "./",

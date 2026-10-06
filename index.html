@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="予伊">
+<meta name="apple-mobile-web-app-title" content="予卿">
 <!-- 这是私人礼物，不希望被搜索引擎收录 -->
 <meta name="robots" content="noindex,nofollow,noarchive">
 <link rel="manifest" href="manifest.webmanifest">
@@ -16,7 +16,7 @@
 <link rel="icon" type="image/svg+xml" href="icon.svg">
 <link rel="apple-touch-icon" href="icon-512.png">
 <link rel="shortcut icon" href="icon-512.png">
-<title>予伊</title>
+<title>予卿</title>
 <style>
   /* ---------- 色彩令牌：浅色 ---------- */
   :root{
@@ -247,28 +247,48 @@
   /* 蛋糕那句留言 */
   .bday-msg{font-family:var(--font-serif);font-size:17px;line-height:1.85;color:var(--ink);margin:6px 0 0;
             letter-spacing:.2px}
-  /* 她那一页里的"三条规矩" */
-  .fh-list{margin:0;padding:0 0 0 2px;list-style:none}
-  .fh-list li{position:relative;padding:0 0 9px 20px;font-size:15px;line-height:1.75;color:var(--ink)}
-  .fh-list li:before{content:"";position:absolute;left:3px;top:11px;width:5px;height:5px;border-radius:50%;background:var(--accent)}
-  .fh-why{font-size:12.5px;color:var(--why-ink);margin-top:9px;padding-top:9px;border-top:1px solid var(--line-soft)}
 
-  /* ---------- 给她的那一页 ---------- */
-  .forher{min-height:100vh;display:flex;flex-direction:column;padding:calc(22px + env(safe-area-inset-top)) 26px calc(30px + env(safe-area-inset-bottom))}
-  .fh-top{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--ink-3);letter-spacing:.6px}
-  .fh-exit{background:none;border:none;color:var(--ink-3);font-size:12.5px;font-family:inherit;padding:6px 2px;cursor:pointer}
-  .fh-body{flex:1;display:flex;flex-direction:column;justify-content:center;padding:24px 0 8px}
-  .fh-msg{font-family:var(--font-serif);font-size:22px;line-height:2;letter-spacing:.4px;color:var(--ink)}
-  .fh-sign{text-align:right;font-size:14px;color:var(--ink-3);margin-top:14px;letter-spacing:1px}
-  .fh-rule{height:1px;background:var(--line);margin:30px 0 26px}
-  .fh-label{font-size:11.5px;letter-spacing:3px;color:var(--accent-deep);margin-bottom:10px;font-weight:600}
-  .fh-p{font-size:15px;color:var(--ink-2);margin:0 0 10px;line-height:1.75}
-  .fh-task{background:var(--card);border:1px solid var(--line-soft);border-radius:18px;padding:16px 17px;margin:6px 0 12px;box-shadow:var(--shadow-sm)}
-  .fh-task-title{font-family:var(--font-serif);font-size:19px;line-height:1.6;font-weight:600}
-  .fh-task-how{font-size:13.5px;color:var(--ink-3);margin-top:6px}
-  .fh-count{font-size:12.5px;color:var(--ink-3);letter-spacing:.6px;margin-bottom:22px}
-  .fh-foot{text-align:center;font-size:11.5px;color:var(--ink-3);letter-spacing:2px;margin-top:22px}
-
+  /* ---------- 给她的那一页：交付那一刻的视觉 ---------- */
+  .forher{min-height:100vh;display:flex;flex-direction:column;
+          padding:calc(16px + env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom));
+          background:radial-gradient(125% 42% at 50% 0%, var(--bg-glow) 0%, transparent 62%)}
+  .fh-top{display:flex;justify-content:space-between;align-items:center;padding:0 8px 12px}
+  .fh-top span{font-size:12px;color:var(--ink-3);letter-spacing:1.6px}
+  .fh-exit{background:none;border:none;color:var(--ink-3);font-size:12.5px;font-family:inherit;padding:6px 4px;cursor:pointer;letter-spacing:.5px}
+  .fh-card{flex:1;display:flex;flex-direction:column;position:relative;
+           background:var(--card);border:1px solid var(--line);border-radius:26px;
+           padding:26px 24px 24px;box-shadow:var(--shadow);
+           animation:fhIn .7s cubic-bezier(.2,.8,.2,1) both}
+  @keyframes fhIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .fh-seal{align-self:center;font-family:var(--font-serif);font-size:13px;letter-spacing:7px;text-indent:7px;
+           color:var(--accent-deep);border:1px solid var(--accent-line);border-radius:9px;
+           padding:6px 10px 6px 16px;margin:2px 0 28px;background:var(--card-tint)}
+  .fh-hero,.fh-block{animation:fhUp .65s ease both}
+  .fh-hero{animation-delay:.10s}
+  .fh-block:nth-of-type(2){animation-delay:.18s}
+  .fh-block:nth-of-type(3){animation-delay:.26s}
+  .fh-block:nth-of-type(4){animation-delay:.34s}
+  @keyframes fhUp{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+  .fh-msg{font-family:var(--font-serif);font-size:23px;line-height:2.05;letter-spacing:.5px;color:var(--ink);margin:0}
+  .fh-sign{text-align:right;font-size:13.5px;color:var(--ink-3);margin-top:18px;letter-spacing:2px}
+  .fh-rule{width:60px;height:1px;background:var(--accent-line);margin:30px auto}
+  .fh-block{margin-bottom:26px}
+  .fh-label{font-size:11.5px;letter-spacing:2.6px;color:var(--accent-deep);font-weight:600;margin-bottom:12px}
+  .fh-p{font-size:15px;color:var(--ink-2);margin:0;line-height:1.85}
+  .fh-rules{list-style:none;margin:0;padding:0}
+  .fh-rules li{display:flex;gap:13px;align-items:baseline;padding:9px 0}
+  .fh-rules li i{flex:0 0 18px;text-align:center;font-style:normal;font-family:var(--font-serif);font-size:15px;color:var(--accent)}
+  .fh-rules li span{font-size:15px;line-height:1.75;color:var(--ink)}
+  .fh-tag{display:inline-block;font-size:11px;padding:3px 9px;border-radius:999px;background:var(--accent-soft);
+          color:var(--accent-deep);letter-spacing:1.4px;margin-bottom:11px}
+  .fh-task{position:relative;overflow:hidden;border-radius:18px;padding:18px;
+           background:linear-gradient(158deg,var(--hero-from),var(--hero-to));border:1px solid var(--accent-line)}
+  .fh-task:before{content:"";position:absolute;left:0;right:0;top:0;height:2.5px;
+                  background:linear-gradient(90deg,var(--accent),var(--accent-line) 62%,transparent)}
+  .fh-task-title{font-family:var(--font-serif);font-size:19px;line-height:1.6;font-weight:600;letter-spacing:.2px}
+  .fh-task-how{font-size:13.5px;color:var(--ink-2);margin-top:7px}
+  .fh-why{font-size:12.5px;color:var(--why-ink);margin-top:12px;padding-top:11px;border-top:1px solid var(--line-soft);line-height:1.6}
+  .fh-foot{margin-top:auto;padding-top:24px;text-align:center;font-size:11px;color:var(--ink-3);letter-spacing:3px}
   /* 无障碍：键盘焦点可见、动效可关 */
   :focus-visible{outline:2.5px solid var(--accent);outline-offset:3px;border-radius:8px}
   @media (prefers-reduced-motion: reduce){
@@ -283,7 +303,7 @@
 
 <script>
 /* ============================================================
-   予伊 · Phase 1 Demo
+   予卿 · Phase 1 Demo
    单文件、离线、纯本地存储。无任何网络请求。
    ============================================================ */
 
@@ -1008,38 +1028,45 @@ function render(){
 function herContent(){
   const msg = S.profile.bdayMessage || BIRTHDAY_PACK.message;
   return ''
-    + '<div class="fh-msg">「'+esc(msg)+'」</div>'
+    + '<div class="fh-hero"><p class="fh-msg">'+esc(msg)+'</p>'
     + '<div class="fh-sign">—— 我</div>'
-    + '<div class="fh-rule"></div>'
-    + '<div class="fh-label">这个东西是我做的</div>'
-    + '<p class="fh-p">它每天只做一件事：提醒我，今天能为你做点什么。</p>'
-    + '<div class="fh-rule" style="margin:24px 0 20px"></div>'
-    + '<div class="fh-label">我做它的时候，给自己定了三条规矩</div>'
-    + '<ul class="fh-list">'
-      + '<li>不做大惊喜，只做每天一件小事</li>'
-      + '<li>你累的时候，先替你把事接过来，而不是送东西</li>'
-      + '<li>你讨厌的事，永远不会出现</li>'
-    + '</ul>'
-    + '<div class="fh-label" style="margin-top:22px">它长什么样 · 随手举个例子</div>'
-    + '<div class="fh-task">'
-      + '<div class="fh-task-title">今晚的碗我洗，她不许进厨房</div>'
-      + '<div class="fh-task-how">吃完就收，别等她开口。</div>'
-      + '<div class="fh-why">为什么是今天：她这两天腰疼，别再让她站着</div>'
     + '</div>'
-    + '<p class="fh-p" style="margin-top:14px">像这样的事，它每天只给我一件。</p>'
-    + '<div class="fh-foot">予伊 · Today for Her</div>';
+    + '<div class="fh-rule"></div>'
+    + '<div class="fh-block">'
+      + '<div class="fh-label">这个东西是我做的</div>'
+      + '<p class="fh-p">它每天只做一件事：提醒我，今天能为你做点什么。</p>'
+    + '</div>'
+    + '<div class="fh-block">'
+      + '<div class="fh-label">我给自己定了三条规矩</div>'
+      + '<ol class="fh-rules">'
+        + '<li><i>一</i><span>不做大惊喜，只做每天一件小事</span></li>'
+        + '<li><i>二</i><span>你累的时候，先替你把事接过来，而不是送东西</span></li>'
+        + '<li><i>三</i><span>你讨厌的事，永远不会出现</span></li>'
+      + '</ol>'
+    + '</div>'
+    + '<div class="fh-block">'
+      + '<div class="fh-label">它长什么样 · 随手举个例子</div>'
+      + '<div class="fh-task">'
+        + '<span class="fh-tag">分 担</span>'
+        + '<div class="fh-task-title">今晚的碗我洗，她不许进厨房</div>'
+        + '<div class="fh-task-how">吃完就收，别等她开口。</div>'
+        + '<div class="fh-why">为什么是今天：她这两天腰疼，别再让她站着</div>'
+      + '</div>'
+      + '<p class="fh-p" style="margin-top:13px">像这样的事，它每天只给我一件。</p>'
+    + '</div>'
+    + '<div class="fh-foot">予卿 · Today for Her</div>';
 }
 function viewForHer(){
   return '<div class="forher">'
     + '<div class="fh-top"><span>'+fmtDate(todayStr())+'</span>'
       + '<button class="fh-exit" data-act="exit-her">返回</button></div>'
-    + '<div class="fh-body">' + herContent() + '</div>'
+    + '<div class="fh-card"><div class="fh-seal">予卿</div>' + herContent() + '</div>'
     + '</div>';
 }
 /* 她模式下，「今天」这一页也不能显示作战包和当天任务 */
 function herToday(){
-  return '<div class="forher" style="min-height:auto">'
-    + '<div class="fh-body" style="padding-top:6px">' + herContent() + '</div>'
+  return '<div class="forher" style="min-height:auto;padding-top:10px">'
+    + '<div class="fh-card">' + herContent() + '</div>'
     + '</div>';
 }
 
@@ -1453,7 +1480,7 @@ function viewMore(){
     + '<button class="btn ghost" data-act="share">生成今日分享卡</button>'
   + '</div>'
   + '<div class="card"><h3>关于</h3>'
-    + '<div class="muted">予伊 · Today for Her · Phase 1<br>单文件 PWA，可添加到手机主屏幕离线使用。<br>'
+    + '<div class="muted">予卿 · Today for Her · Phase 1<br>单文件 PWA，可添加到手机主屏幕离线使用。<br>'
     + '任务库 '+library().length+' 条（含 '+MY_LIB.length+' 条专属），另有节日任务 '+FEST_LIB.length+' 条、准备类 '+PREP_LIB.length+' 条。<br>'
     + '推荐由她的画像、当天状态、临近的重要日子共同决定。</div>'
   + '</div>'
@@ -1780,7 +1807,7 @@ function buildICS(){
   const today = todayStr();
   const A3 = ['-P7D','-P1D','PT0S'], A1 = ['-P1D'];
   let out = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//OneSmallThing//CN\r\n'
-    + 'CALSCALE:GREGORIAN\r\nMETHOD:PUBLISH\r\nX-WR-CALNAME:'+icsEsc('予伊')+'\r\n';
+    + 'CALSCALE:GREGORIAN\r\nMETHOD:PUBLISH\r\nX-WR-CALNAME:'+icsEsc('予卿')+'\r\n';
 
   const lunarFest = key => {
     const f = FESTIVALS.find(x => x.key === key);
@@ -1816,8 +1843,8 @@ function buildICS(){
     // 她的生日 / 纪念日 / 家人相关的日子：提前 7 天、提前 1 天、当天 09:00 各提醒一次
     const isBday = x.key === 'birthday';
     out += icsEvent('tfh-'+x.key+'@todayforher', x.date, x.label,
-      (isBday ? '今天是她的生日。打开「予伊」，照着作战包做：早上早起半小时、白天带娃两小时、傍晚三件套、晚上看半场世界杯。'
-              : '打开「予伊」，看今天的安排。'),
+      (isBday ? '今天是她的生日。打开「予卿」，照着作战包做：早上早起半小时、白天带娃两小时、傍晚三件套、晚上看半场世界杯。'
+              : '打开「予卿」，看今天的安排。'),
       A3, x.lunar ? null : 'FREQ=YEARLY');
   });
   return out + 'END:VCALENDAR\r\n';
@@ -1838,7 +1865,7 @@ function shareCard(){
     + '<div class="d">'+fmtDate(t.date)+'</div>'
     + '<div class="t">'+esc(t.task.title)+'</div>'
     + '<div class="muted" style="font-size:13px">第 '+(S.done.length+1)+' 件小事 · 给'+esc(S.profile.name)+'</div>'
-    + '<div class="f">予伊 · 截图存下来</div>'
+    + '<div class="f">予卿 · 截图存下来</div>'
     + '</div>'
     + '<div style="height:14px"></div>'
     + '<button class="btn ghost" id="sheet-cancel2">关掉</button>'
