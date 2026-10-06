@@ -196,6 +196,17 @@
   .chk.on div{text-decoration:line-through;text-decoration-color:var(--good-line)}
 
   /* 引导 */
+  /* 改画像：一页式编辑 */
+  .ed-top{position:sticky;top:0;z-index:6;display:flex;align-items:center;justify-content:space-between;
+          gap:10px;padding:calc(12px + env(safe-area-inset-top)) 16px 12px;
+          background:var(--bg);border-bottom:1px solid var(--line-soft)}
+  .ed-top span{font-size:14px;font-weight:600;color:var(--ink)}
+  .ed-btn{background:none;border:none;font-family:inherit;font-size:14px;color:var(--ink-3);padding:6px 2px;cursor:pointer}
+  .ed-btn.save{color:var(--accent-deep);font-weight:600}
+  .ed-sec{border-bottom:1px dashed var(--line);padding-bottom:18px;margin-bottom:18px}
+  .ed-sec:last-of-type{border-bottom:none}
+  .ed-sec h2{font-size:17px}
+  .ed-sec .lead{margin-bottom:14px}
   .onboard{padding:calc(40px + env(safe-area-inset-top)) 22px calc(40px + env(safe-area-inset-bottom));min-height:100vh;display:flex;flex-direction:column}
   .dots{display:flex;gap:5px;margin:0 auto 26px}
   .dot{width:7px;height:7px;border-radius:50%;background:var(--dot);transition:background-color .25s,width .25s}
@@ -430,9 +441,8 @@ const MY_DAYS = [
   {id:'m3', label:'去年今天，她在医院保胎', kind:'quiet', lunar:false, md:'07-30'}
 ];
 const MY_BABY_BIRTHDAY = '2025-12-04';
-/* 她的生日：公历 10 月 7 日。年份只是占位——App 全程只用「月-日」，
-   在问卷里填成真实年份也不影响任何计算。 */
-const MY_BIRTHDAY = '1990-10-07';
+/* 她的生日：1991 年 10 月 7 日。App 的推荐逻辑只用「月-日」，年份只是存着不出错。 */
+const MY_BIRTHDAY = '1991-10-07';
 
 /* ---------- 1.4 把你们的过去慢慢问出来（一次一个问题） ----------
    设计意图：不让人"填时间线"，而是每天顺手回答一个小问题。
@@ -775,6 +785,7 @@ let S = load();
 let HER_MODE = false;
 let FOR_HER  = false;
 let INBOX    = false;
+let EDITING  = false;   // 「改一下她的画像」：一页式编辑，不是重走引导
 
 /* 显示名：JS 里只用这一处；另外两处在 <title>/<meta> 和 manifest.webmanifest */
 const APP_LABEL = '予卿';
@@ -1138,10 +1149,29 @@ function render(){
   if(FOR_HER){ app.innerHTML = viewForHer(); bind(); window.scrollTo(0, keepY); return; }
   if(INBOX){ app.innerHTML = viewInbox(); bind(); window.scrollTo(0, 0); return; }
   // 注意：引导页也必须调 bind()，否则「继续／上一步」按钮没有点击事件
-  if(!S.onboarded){ app.innerHTML = viewOnboard(); bind(); afterOnboard(); window.scrollTo(0, keepY); return; }
+  if(!S.onboarded){
+    app.innerHTML = EDITING ? viewProfileEditor() : viewOnboard();
+    bind(); afterOnboard(); window.scrollTo(0, keepY); return;
+  }
   app.innerHTML = viewShell();
   bind();
   window.scrollTo(0, keepY);   // 保位：点状态/打勾不该把页面弹回顶部
+}
+
+/* --- 改画像：把 8 个问题一次铺开，顶部/底部都有保存与取消 --- */
+function viewProfileEditor(){
+  const box = f => '<div class="ed-sec">'+f()+'</div>';
+  return '<div class="ed-top">'
+      + '<button class="ed-btn" data-act="cancel-edit">取消</button>'
+      + '<span>改一下她的画像</span>'
+      + '<button class="ed-btn save" data-act="save-profile">保存</button>'
+    + '</div>'
+    + '<div class="onboard" style="padding-top:8px">'
+      + box(()=>'<h2>你平时怎么叫她</h2><input type="text" id="ob-name" value="'+esc(ob.name||'')+'" placeholder="她 / 老婆 / 名字 / 小名">')
+      + ONBOARD_STEPS.slice(1).map(box).join('')
+      + '<button class="btn primary" data-act="save-profile">保存</button>'
+      + '<button class="btn text" data-act="cancel-edit">取消，什么都不改</button>'
+    + '</div>';
 }
 
 /* --- 给她看的那一页（礼物递出去时的第一屏） ---
@@ -1911,7 +1941,28 @@ function handle(act){
     ob.birthday = p.birthday || ''; ob.anniversary = p.anniversary || ''; ob.babyBirthday = p.babyBirthday || '';
     ob.timeBudget = p.timeBudget || 30; ob.costBudget = p.costBudget == null ? 2 : p.costBudget;
     ob.likes = (p.likes || []).slice(); ob.avoid = (p.avoid || []).slice(); ob.stage = p.stage || '带娃期';
-    window.__step = 0; S.onboarded = false; render(); return;
+    window.__step = 0; EDITING = true; S.onboarded = false; render(); window.scrollTo(0,0); return;
+  }
+  if(act === 'cancel-edit'){
+    EDITING = false; S.onboarded = true;
+    ob.name = ''; ob.birthday=''; ob.anniversary=''; ob.babyBirthday=''; ob.likes=[]; ob.avoid=[];
+    save(); TAB = 'her'; render(); toast('没有改动');
+    return;
+  }
+  if(act === 'save-profile'){
+    collectOnboard();
+    S.profile = Object.assign(S.profile, {
+      name: ob.name || S.profile.name || '她',
+      birthday: ob.birthday || S.profile.birthday,
+      anniversary: ob.anniversary || S.profile.anniversary,
+      babyBirthday: ob.babyBirthday || S.profile.babyBirthday,
+      timeBudget: ob.timeBudget, costBudget: ob.costBudget,
+      likes: ob.likes.slice(), avoid: ob.avoid.slice(), stage: ob.stage
+    });
+    EDITING = false; S.onboarded = true;
+    ob.name=''; ob.birthday=''; ob.anniversary=''; ob.babyBirthday=''; ob.likes=[]; ob.avoid=[];
+    save(); TAB = 'her'; render(); toast('改好了');
+    return;
   }
   if(act === 'export'){ return exportData(); }
   if(act === 'export-ics'){ return exportICS(); }
@@ -2440,6 +2491,8 @@ function shareCard(){
 (function seedMine(){
   // 首次运行：把你自己的重要日子放进「她」页（只做一次，之后可以在「更多」里改）
   try{
+    // 迁移：早期版本把她的生日年份写成了占位值 1990，这里对齐成真实年份
+    if(S.profile.birthday === '1990-10-07'){ S.profile.birthday = MY_BIRTHDAY; save(); }
     if(DEMO || S.seeded) return;
     S.profile.days = (S.profile.days || []).concat(MY_DAYS.filter(d => !(S.profile.days || []).some(x => x.label === d.label)));
     if(!S.profile.babyBirthday) S.profile.babyBirthday = MY_BABY_BIRTHDAY;
