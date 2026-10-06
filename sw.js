@@ -5,7 +5,7 @@
    - 其他静态资源用「缓存优先」——首屏更快，且离线可用。
    改了本文件或资源的版本，把 CACHE 名字 +1。 */
 const CACHE = 'today-for-her-v3';
-const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon.svg', './icon-512.png', './robots.txt'];
+const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon.svg', './icon-512.png', './icon-192.png', './robots.txt'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));

@@ -13,6 +13,7 @@
 <meta name="robots" content="noindex,nofollow,noarchive">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="icon" type="image/svg+xml" href="icon.svg">
 <link rel="apple-touch-icon" href="icon-512.png">
 <link rel="shortcut icon" href="icon-512.png">
@@ -289,6 +290,10 @@
   .fh-task-how{font-size:13.5px;color:var(--ink-2);margin-top:7px}
   .fh-why{font-size:12.5px;color:var(--why-ink);margin-top:12px;padding-top:11px;border-top:1px solid var(--line-soft);line-height:1.6}
   .fh-foot{margin-top:auto;padding-top:24px;text-align:center;font-size:11px;color:var(--ink-3);letter-spacing:3px}
+  /* 弹层里的分步说明 */
+  .steps{margin:0;padding-left:22px;font-size:14.5px;line-height:1.95;color:var(--ink)}
+  .steps li{padding:1px 0}
+  .steps li::marker{color:var(--accent);font-weight:600}
   /* 无障碍：键盘焦点可见、动效可关 */
   :focus-visible{outline:2.5px solid var(--accent);outline-offset:3px;border-radius:8px}
   @media (prefers-reduced-motion: reduce){
@@ -755,6 +760,9 @@ let S = load();
 let HER_MODE = false;
 let FOR_HER  = false;
 
+/* 显示名：JS 里只用这一处；另外两处在 <title>/<meta> 和 manifest.webmanifest */
+const APP_LABEL = '予卿';
+
 /* ---------- 外观：跟随系统 / 浅色 / 深色 ---------- */
 function resolveTheme(){
   const pref = (S.profile && S.profile.theme) || 'auto';
@@ -770,6 +778,21 @@ function buzz(ms){
 /* 预览模式（#demo / #demo-birthday / #demo-eve）：只改内存、不落盘，避免看演示时覆盖掉真实数据 */
 const DEMO_HASHES = ['#demo', '#demo-birthday', '#demo-eve'];
 let DEMO = (typeof location !== 'undefined' && DEMO_HASHES.includes(location.hash));
+
+/* ---------- 装到桌面 ---------- */
+let installEvt = null;
+let installed = false;
+try{
+  installed = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+           || window.navigator.standalone === true;
+}catch(e){}
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); installEvt = e; render();   // 拿到浏览器原生安装事件就换成"一键装"
+});
+window.addEventListener('appinstalled', () => {
+  installEvt = null; installed = true; toast('装好了，去桌面看看');
+  render();
+});
 function load(){
   try{
     const raw = localStorage.getItem(KEY);
@@ -1054,13 +1077,13 @@ function herContent(){
       + '</div>'
       + '<p class="fh-p" style="margin-top:13px">像这样的事，它每天只给我一件。</p>'
     + '</div>'
-    + '<div class="fh-foot">予卿 · Today for Her</div>';
+    + '<div class="fh-foot">'+APP_LABEL+' · Today for Her</div>';
 }
 function viewForHer(){
   return '<div class="forher">'
     + '<div class="fh-top"><span>'+fmtDate(todayStr())+'</span>'
       + '<button class="fh-exit" data-act="exit-her">返回</button></div>'
-    + '<div class="fh-card"><div class="fh-seal">予卿</div>' + herContent() + '</div>'
+    + '<div class="fh-card"><div class="fh-seal">'+APP_LABEL+'</div>' + herContent() + '</div>'
     + '</div>';
 }
 /* 她模式下，「今天」这一页也不能显示作战包和当天任务 */
@@ -1202,6 +1225,7 @@ function viewToday(){
   let html = '';
 
   html += storageWarning();
+  html += installNote();
 
   // 她的生日没填，整套生日功能都不会触发——这件事必须在首页提醒
   if(!S.profile.birthday){
@@ -1468,6 +1492,7 @@ function viewMore(){
   + '</div>'
   + pendingDaysCard()
   + themeCard()
+  + installNote()
   + '<div class="card"><h3>把手机递给她</h3>'
     + '<div class="muted" style="margin-bottom:10px">打开「给她的那一页」：一屏，只有给她的那句话和今天这件事。进入后会自动隐藏「她／更多」两个页面，免得她翻到雷区清单和私人设置。</div>'
     + '<button class="btn ghost" data-act="hand-over">打开给她的那一页</button>'
@@ -1480,7 +1505,7 @@ function viewMore(){
     + '<button class="btn ghost" data-act="share">生成今日分享卡</button>'
   + '</div>'
   + '<div class="card"><h3>关于</h3>'
-    + '<div class="muted">予卿 · Today for Her · Phase 1<br>单文件 PWA，可添加到手机主屏幕离线使用。<br>'
+    + '<div class="muted">'+APP_LABEL+' · Today for Her · Phase 1<br>单文件 PWA，可添加到手机主屏幕离线使用。<br>'
     + '任务库 '+library().length+' 条（含 '+MY_LIB.length+' 条专属），另有节日任务 '+FEST_LIB.length+' 条、准备类 '+PREP_LIB.length+' 条。<br>'
     + '推荐由她的画像、当天状态、临近的重要日子共同决定。</div>'
   + '</div>'
@@ -1514,6 +1539,33 @@ function themeCard(){
     + '<div class="chips" style="margin-bottom:0">'
     + opts.map(([v,l])=>'<div class="chip'+(cur===v?' on':'')+'" data-theme-pick="'+v+'">'+l+'</div>').join('')
     + '</div></div>';
+}
+/* 装到桌面：能在浏览器里一键装就一键装，不能就给华为手机的分步说明 */
+function installNote(){
+  if(installed || S.profile.installDismissed || HER_MODE) return '';
+  return '<div class="card card-logi">'
+    + '<h3>把它装到桌面</h3>'
+    + '<div class="muted">装好之后是一个带「'+esc(APP_LABEL)+'」图标的 App：点开就用，断网也能打开，也没有地址栏。</div>'
+    + '<button class="btn primary" data-act="install" style="margin-top:12px">'+(installEvt ? '装到桌面' : '看怎么装（华为手机）')+'</button>'
+    + '<button class="btn text" data-act="install-hide">已经装好了 / 不用了</button>'
+    + '</div>';
+}
+function installStepsSheet(){
+  openSheet(
+    '<h2>装到手机桌面</h2>'
+    + '<div class="muted" style="margin-bottom:14px">华为手机用「<b>华为浏览器</b>」打开这个网址（不要在微信里直接点开）：</div>'
+    + '<ol class="steps">'
+      + '<li>手机相机扫那张二维码 → 提示时选「用浏览器打开」</li>'
+      + '<li>等页面加载完（顺便会把内容缓存下来，之后断网也能开）</li>'
+      + '<li>点浏览器右下角的菜单（三条横线 或 ⋮）</li>'
+      + '<li>选「<b>添加到桌面</b>」（部分版本叫「添加到主屏幕」）</li>'
+      + '<li>桌面出现「'+esc(APP_LABEL)+'」图标，点开就能用</li>'
+    + '</ol>'
+    + '<div class="muted" style="margin-top:14px">菜单里找不到「添加到桌面」的话：换成 Chrome 打开 → 右上角 ⋮ → 「添加到主屏幕」或「安装应用」。</div>'
+    + '<div class="muted" style="margin-top:8px">如果打不开后是全屏、没有地址栏，说明装成了独立 App（最好）；如果还带地址栏，那只是个快捷方式，功能完全一样。</div>'
+    + '<button class="btn ghost" id="inst-close" style="margin-top:16px">知道了</button>'
+  );
+  document.getElementById('inst-close').onclick = closeSheet;
 }
 
 /* ---------- 7. 交互 ---------- */
@@ -1589,6 +1641,16 @@ function handle(act){
   if(act === 'story-open'){ return openStorySheet(); }
   if(act === 'story-save'){ return saveStory(); }
   if(act === 'hand-over'){ HER_MODE = true; FOR_HER = true; render(); window.scrollTo(0,0); return; }
+  if(act === 'install'){
+    if(installEvt){
+      installEvt.prompt();
+      installEvt.userChoice && installEvt.userChoice.then(()=>{ installEvt = null; render(); });
+    } else {
+      installStepsSheet();
+    }
+    return;
+  }
+  if(act === 'install-hide'){ S.profile.installDismissed = true; save(); render(); return; }
   if(act === 'enter-her'){ FOR_HER = false; TAB = 'today'; render(); window.scrollTo(0,0); return; }
   if(act === 'exit-her'){ FOR_HER = false; HER_MODE = false; TAB = 'today'; render(); window.scrollTo(0,0); return; }
   if(act === 'edit-bday-msg'){
@@ -1807,7 +1869,7 @@ function buildICS(){
   const today = todayStr();
   const A3 = ['-P7D','-P1D','PT0S'], A1 = ['-P1D'];
   let out = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//OneSmallThing//CN\r\n'
-    + 'CALSCALE:GREGORIAN\r\nMETHOD:PUBLISH\r\nX-WR-CALNAME:'+icsEsc('予卿')+'\r\n';
+    + 'CALSCALE:GREGORIAN\r\nMETHOD:PUBLISH\r\nX-WR-CALNAME:'+icsEsc(APP_LABEL)+'\r\n';
 
   const lunarFest = key => {
     const f = FESTIVALS.find(x => x.key === key);
@@ -1843,8 +1905,8 @@ function buildICS(){
     // 她的生日 / 纪念日 / 家人相关的日子：提前 7 天、提前 1 天、当天 09:00 各提醒一次
     const isBday = x.key === 'birthday';
     out += icsEvent('tfh-'+x.key+'@todayforher', x.date, x.label,
-      (isBday ? '今天是她的生日。打开「予卿」，照着作战包做：早上早起半小时、白天带娃两小时、傍晚三件套、晚上看半场世界杯。'
-              : '打开「予卿」，看今天的安排。'),
+      (isBday ? '今天是她的生日。打开「'+APP_LABEL+'」，照着作战包做：早上早起半小时、白天带娃两小时、傍晚三件套、晚上看半场世界杯。'
+              : '打开「'+APP_LABEL+'」，看今天的安排。'),
       A3, x.lunar ? null : 'FREQ=YEARLY');
   });
   return out + 'END:VCALENDAR\r\n';
@@ -1865,7 +1927,7 @@ function shareCard(){
     + '<div class="d">'+fmtDate(t.date)+'</div>'
     + '<div class="t">'+esc(t.task.title)+'</div>'
     + '<div class="muted" style="font-size:13px">第 '+(S.done.length+1)+' 件小事 · 给'+esc(S.profile.name)+'</div>'
-    + '<div class="f">予卿 · 截图存下来</div>'
+    + '<div class="f">'+APP_LABEL+' · 截图存下来</div>'
     + '</div>'
     + '<div style="height:14px"></div>'
     + '<button class="btn ghost" id="sheet-cancel2">关掉</button>'
